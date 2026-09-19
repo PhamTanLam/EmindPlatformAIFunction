@@ -1,0 +1,2105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>機能A 画面モック</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  :root{
+    color-scheme:light;
+    --brand:#089490; --accent:#0ABAB5; --accent-soft:#7dd9d6; --accent-bg:#e7f5f4;
+    --ink:#2e3538; --ink-2:#6b7280; --ink-3:#9ca3af;
+    --line:#e6eae9; --bg:#f2f5f4; --white:#fff;
+    --ok:#16a34a; --ok-d:#0f8139; --warn:#f59e0b; --warn-d:#b45309; --err:#dc2626; --info:#2563eb; --later:#7c3aed;
+  }
+  body{font-family:'Noto Sans JP','Segoe UI',-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:13px;-webkit-font-smoothing:antialiased}
+  .app{display:flex;height:100%;overflow:hidden}
+
+  /* ---------------- sidebar ---------------- */
+  .sidebar{width:228px;min-width:228px;background:var(--brand);color:#fff;display:flex;flex-direction:column}
+  .sidebar-logo{padding:17px 16px;border-bottom:1px solid rgba(255,255,255,.13)}
+  .sidebar-logo b{font-size:15px;color:#fff;letter-spacing:.4px}
+  .sidebar-logo span{display:block;font-size:10.5px;color:rgba(255,255,255,.5);margin-top:3px}
+  .nav-label{font-size:10px;color:rgba(255,255,255,.35);padding:15px 16px 6px;letter-spacing:1.2px}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;color:rgba(255,255,255,.75);border-left:3px solid transparent;transition:.15s}
+  .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+  .nav-item.active{background:rgba(255,255,255,.13);color:#fff;border-left-color:var(--accent-soft)}
+  .nav-ic{width:19px;height:19px;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:.85}
+  .nav-ic svg{width:17px;height:17px;display:block}
+  .nav-item.active .nav-ic{opacity:1;color:var(--accent-soft)}
+  .nav-txt{font-size:13px;font-weight:500;flex:1}
+
+  /* ---------------- header ---------------- */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+  .header{background:#fff;border-bottom:1px solid var(--line);padding:0 20px;height:54px;display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-shrink:0}
+  .header-r{display:flex;align-items:center;gap:9px}
+  .user-name{font-size:12.5px;font-weight:500;color:var(--ink-2)}
+  .toggle{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2);cursor:pointer;user-select:none;white-space:nowrap}
+  .toggle input{cursor:pointer;accent-color:var(--accent)}
+  .avatar{width:31px;height:31px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;flex-shrink:0}
+
+  .content{flex:1;overflow-y:auto;padding:18px 20px 50px;min-width:0}
+  .page{display:none}.page.active{display:block}
+
+  .page-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+  .page-hd h1{font-size:20px;font-weight:700;letter-spacing:-.2px}
+  .page-hd p{font-size:12px;color:var(--ink-2);margin-top:4px;line-height:1.6}
+  .page-acts{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* ---------------- api ---------------- */
+  .api{display:inline-flex;align-items:center;background:#0f6f6b;color:#fff;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;font-family:ui-monospace,monospace;letter-spacing:.3px;vertical-align:middle}
+  .api.ghost{background:#fff;color:#0f6f6b;border:1px solid #9ed3d0}
+  .ep{font-family:ui-monospace,SFMono-Regular,monospace;font-size:10.5px;color:#14615e;background:#fff;border:1px solid #c6e4e2;border-radius:4px;padding:1px 6px}
+
+  .scope-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;font-size:10.5px;font-weight:700;letter-spacing:.3px}
+  .scope-pill.now{background:#e2f5ef;color:#0a6b4c}
+  .scope-pill.later{background:#f3ecfd;color:#6d28d9}
+  .scope-pill.out{background:#eef0f1;color:#57606a}
+  .scope-pill.tbd{background:#fdf0e1;color:#b45309}
+
+  /* ---------------- review 3-column ---------------- */
+  .rev{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:start}
+  .col{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .col-hd{padding:10px 13px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fbfcfc}
+  .col-hd b{font-size:12px;font-weight:700}
+  .col-bd{padding:10px}
+
+  .fcard{border:1px solid var(--line);border-radius:8px;padding:10px 11px;margin-bottom:7px;cursor:pointer;transition:.15s;display:flex;gap:9px;position:relative}
+  .fcard-x{position:absolute;top:5px;right:5px;border:none;background:none;color:var(--ink-3);font-size:14px;line-height:1;cursor:pointer;padding:3px 5px;border-radius:5px;opacity:0;font-family:inherit;transition:.15s}
+  .fcard:hover .fcard-x,.fcard.on .fcard-x{opacity:1}
+  .fcard-x:hover{background:#fdeaea;color:var(--err)}
+  .fcard-del{border:1px solid #f3c9c9;background:#fdf5f5;border-radius:8px;padding:11px;margin-bottom:7px}
+  .fcard-del-t{font-size:12px;font-weight:700;color:#b91c1c;line-height:1.5;word-break:break-all}
+  .fcard-del-d{font-size:10.5px;color:var(--ink-2);line-height:1.7;margin:7px 0 9px}
+  .fcard-del-a{display:flex;gap:6px}
+  .fcard:hover{border-color:#b9d9d7;background:#fbfefe}
+  .fcard.on{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 0 0 1px var(--accent) inset}
+  .fcard-ic{font-size:15px;line-height:1.3}
+  .fcard-n{font-size:12px;font-weight:500;line-height:1.45;word-break:break-all;padding-right:16px}
+  .fcard-m{font-size:10.5px;color:var(--ink-3);margin-top:4px;display:flex;align-items:center;gap:5px}
+  .fdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+  /* extracted panel */
+  .ex-hd{padding:10px 13px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px}
+  .ex-hd-l{min-width:0}
+  .ex-hd-t{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;word-break:break-all}
+  .ex-hd-m{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:10.5px;color:var(--ink-3);font-family:ui-monospace,monospace}
+  .ex-hd-r{min-width:270px}
+  .ex-list{max-height:none}
+  .sum-bar{height:4px;border-radius:2px;background:#e6eae9;overflow:hidden;display:flex;margin-top:8px}
+  .sum-bar i{display:block;height:100%;transition:width .3s}
+  .sum-bar i.ok{background:var(--ok)}
+  .sum-bar i.rej{background:#c3c9cd}
+  .sum-row{display:flex;gap:17px;flex-wrap:wrap;justify-content:center}
+  .sum-i{font-size:10px;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap}
+  .sum-i b{font-size:16px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
+  .sum-i.ok b{color:var(--ok-d)}
+  .sum-i.open b{color:var(--warn-d)}
+  .sum-i.rej b{color:var(--ink-3)}
+  .sum-i.q b{color:var(--brand)}
+
+  .grp{border-top:1px solid var(--line)}
+  .grp:first-child{border-top:none}
+  .grp-head{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;user-select:none}
+  .grp-head:hover{background:#fbfcfc}
+  .grp-caret{font-size:9px;color:var(--ink-3);width:10px;transition:transform .15s}
+  .grp.collapsed .grp-caret{transform:rotate(-90deg)}
+  .grp-title{flex:1;font-size:12.5px;font-weight:500}
+  .grp-body{padding:0 12px 12px}
+  .grp.collapsed .grp-body{display:none}
+
+  .ex{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-top:8px;cursor:pointer;transition:.15s;background:#fff}
+  .ex:hover{border-color:#b9d9d7}
+  .ex.focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,186,181,.13)}
+  .ex.resolved{opacity:.55}
+  .ex-cat{font-size:11px;color:var(--ink-3);margin-bottom:3px}
+  .ex-txt{font-size:13px;font-weight:500;line-height:1.55;word-break:break-word}
+  .ex-meta{margin-top:6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .ex-why{font-size:11.5px;color:var(--warn-d);margin-top:6px;line-height:1.6}
+  .ex-src{font-size:11px;color:var(--brand);margin-top:5px;cursor:pointer;display:inline-block}
+  .ex-src:hover{text-decoration:underline}
+  .ex-acts{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+  .editbox{margin-top:8px}
+  .conf{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .conf-bar{width:38px;height:4px;border-radius:2px;background:#e6eae9;overflow:hidden}
+  .conf-bar i{display:block;height:100%;border-radius:2px}
+
+  .qbox{background:#fffbf2;border:1px solid #f4dcb4;border-radius:8px;padding:11px 12px;margin:0 10px 10px}
+  .qbox-t{font-size:10.5px;font-weight:700;color:#b45309;margin-bottom:6px;letter-spacing:.4px;display:flex;align-items:center;gap:5px}
+  .qi{border-top:1px dashed #f2e0bf;padding:11px 0 3px}
+  .qi:first-of-type{border-top:none;padding-top:4px}
+  .qi.done{opacity:.7}
+  .qi-q{font-size:12.5px;line-height:1.65;display:flex;gap:7px}
+  .qi-q .n{color:var(--warn-d);font-weight:700;flex-shrink:0}
+  .qi-in{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;padding-left:16px}
+  .qi-in input{flex:1;min-width:190px;padding:7px 10px;font-size:12.5px;background:#fff}
+  .qi-a{font-size:12px;color:var(--ink-2);margin-top:8px;padding-left:16px;line-height:1.6}
+  .qi-a b{color:var(--ink);font-weight:500}
+  .qi-wrap{padding-left:16px}
+  .diff{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;margin-top:8px;align-items:stretch}
+  .diff .side{border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:12.5px;background:#fbfcfc;line-height:1.5}
+  .diff .side.to{border-color:var(--accent);background:#f7fdfd}
+  .diff .lb{display:block;font-size:9.5px;color:var(--ink-3);letter-spacing:.5px;margin-bottom:3px}
+  .diff .ar{display:flex;align-items:center;color:var(--ink-3);font-size:14px}
+  .diff i{color:var(--ink-3);font-style:normal}
+  @media(max-width:520px){.diff{grid-template-columns:1fr}.diff .ar{justify-content:center;transform:rotate(90deg)}}
+
+  .resp{margin:0 10px 10px;background:#f7f9f9;border-left:3px solid var(--accent);padding:8px 11px;font-size:10.5px;color:var(--ink-2);line-height:1.7;border-radius:0 5px 5px 0}
+  
+
+  /* ---------------- shared ---------------- */
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:17px 18px;margin-bottom:14px}
+  .card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;gap:12px;flex-wrap:wrap}
+  .card-title{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card-sub{font-size:11px;color:var(--ink-3);font-weight:400;margin-top:4px;line-height:1.6}
+
+  .btn{padding:8px 15px;border-radius:6px;border:none;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:#06766f}
+  .btn-outline{background:#fff;color:#374151;border:1px solid #d7dcdb}.btn-outline:hover{background:#f7f9f9}
+  .btn-sm{padding:5px 11px;font-size:11.5px}
+  .btn-danger{background:#fff;color:var(--err);border:1px solid #f3c9c9}.btn-danger:hover{background:#fef5f5}
+  .btn-ok{background:#fff;color:var(--ok-d);border:1px solid var(--ok)}.btn-ok:hover{background:#dcffe2}
+  .btn-xs{padding:3px 9px;font-size:11px;border-radius:6px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn:focus-visible,.nav-item:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .bdg{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:500;white-space:nowrap}
+  .bdg .dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+  .bdg.queued,.bdg.rejected{background:#eef0f1;color:#57606a}
+  .bdg.processing,.bdg.pending{background:#fdf3e3;color:#b45309}
+  .bdg.completed,.bdg.confirmed{background:#e2f5ef;color:#0a6b4c}
+  .bdg.failed{background:#fdeaea;color:#b91c1c}
+  .bdg.candidate{background:#e8f0fe;color:#1a56db}
+  .bdg.applied{background:var(--accent-bg);color:#0f6f6b}
+  .bdg.requiresReview{background:#fdeee1;color:#c2410c}
+  .bdg.superseded{background:#f3ecfd;color:#6d28d9}
+  .bdg.plain{background:#eef0f1;color:#4b5563}
+
+  table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+  .t th{text-align:left;padding:9px 10px;background:#fbfcfc;color:var(--ink-2);font-weight:500;font-size:10.5px;border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:.3px}
+  .t td{padding:11px 10px;border-bottom:1px solid #f2f4f4;vertical-align:middle}
+  .tbl-wrap{overflow-x:auto}
+  .muted{color:var(--ink-3);font-size:10.5px}
+
+  .field{margin-bottom:13px}
+  .label{display:block;font-size:11.5px;font-weight:500;color:#374151;margin-bottom:5px}
+  .label .req{color:var(--err);font-size:9.5px;margin-left:4px}
+  .label .hint{color:var(--ink-3);font-weight:400;font-size:10.5px;margin-left:6px;font-family:ui-monospace,monospace}
+  input[type=text],select,textarea{width:100%;padding:8px 10px;border:1px solid #d7dcdb;border-radius:6px;font-size:13px;font-family:inherit;color:var(--ink);background:#fff}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,186,181,.13)}
+  textarea{resize:vertical;min-height:82px;line-height:1.65}
+  .counter{text-align:right;font-size:10.5px;color:var(--ink-3);margin-top:4px;font-variant-numeric:tabular-nums}
+  .counter.over{color:var(--err);font-weight:700}
+  .drop{border:2px dashed #cfd6d5;border-radius:8px;padding:24px;text-align:center;cursor:pointer;background:#fbfcfc;transition:.15s}
+  .drop:hover{border-color:var(--accent);background:#f2fbfa}
+  .ck{display:flex;align-items:flex-start;gap:8px;padding:6px 0;font-size:12px;cursor:pointer;line-height:1.5}
+  .ck input{margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+
+  .note{background:#f7f9f9;border-left:3px solid var(--accent);padding:10px 13px;font-size:11px;color:var(--ink-2);line-height:1.8;border-radius:0 6px 6px 0;margin-top:12px}
+
+  /* ---------------- chat ---------------- */
+  .chat-wrap{display:grid;grid-template-columns:214px minmax(0,1fr);gap:13px;align-items:start}
+  .th-col{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;max-height:clamp(430px,calc(100dvh - 250px),880px)}
+  .th-new{margin:10px;padding:8px;border:1px dashed #c6e4e2;background:#fbfefe;color:var(--brand);border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+  .th-new:hover{background:var(--accent-bg)}
+  .th-list{overflow-y:auto;padding:0 10px 10px;flex:1}
+  .th{border:1px solid var(--line);border-radius:8px;padding:9px 10px;margin-bottom:6px;cursor:pointer;transition:.15s;position:relative}
+  .th:hover{border-color:#b9d9d7;background:#fbfefe}
+  .th.on{border-color:var(--accent);background:var(--accent-bg);box-shadow:0 0 0 1px var(--accent) inset}
+  .th-t{font-size:12px;font-weight:500;line-height:1.45;padding-right:42px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .th-s{font-size:10.5px;color:var(--ink-3);margin-top:5px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .th-m{font-size:10px;color:var(--ink-3);margin-top:6px;display:flex;align-items:center;gap:8px;font-variant-numeric:tabular-nums}
+  .th-x{position:absolute;top:6px;right:6px;border:none;background:none;color:var(--ink-3);font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:4px;opacity:0;font-family:inherit}
+  .th:hover .th-x,.th.on .th-x{opacity:1}
+  .th-x:hover{background:#fdeaea;color:var(--err)}
+  .th-e{position:absolute;top:6px;right:26px;border:none;background:none;color:var(--ink-3);font-size:11px;line-height:1;cursor:pointer;padding:3px 4px;border-radius:4px;opacity:0;font-family:inherit}
+  .th:hover .th-e,.th.on .th-e{opacity:1}
+  .th-e:hover{background:var(--accent-bg);color:var(--brand)}
+  .th-in{width:100%;box-sizing:border-box;font-family:inherit;font-size:12px;font-weight:500;line-height:1.45;color:var(--ink);border:1px solid var(--accent);border-radius:5px;padding:3px 6px;background:#fff;outline:none;box-shadow:0 0 0 2px var(--accent-bg)}
+  .chat-topbar{padding:10px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .chat-topbar b{font-size:12.5px}
+  .hist-warn{font-size:10.5px;color:var(--warn);display:flex;align-items:center;gap:5px}
+  .chat{background:#fff;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;height:clamp(430px,calc(100dvh - 250px),880px)}
+  .chat-log{flex:1;overflow-y:auto;padding:16px 18px}
+  .msg{margin-bottom:16px;display:flex;gap:9px}
+  .msg.u{flex-direction:row-reverse}
+  .ava{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+  .ava.ai{background:var(--brand);color:#fff}
+  .ava.u{background:#e3e7e7;color:#4b5563}
+  .bub{max-width:78%;padding:11px 13px;border-radius:10px;font-size:12.5px;line-height:1.75}
+  .msg.a .bub{background:#f7f9f9;border:1px solid var(--line);border-top-left-radius:2px}
+  .msg.u .bub{background:var(--brand);color:#fff;border-top-right-radius:2px}
+  .srcs{margin-top:9px;border-top:1px dashed #d5dcdb;padding-top:8px}
+  .srcs-t{font-size:9.5px;color:var(--ink-3);margin-bottom:5px;letter-spacing:.6px}
+  .src{background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px 9px;margin-bottom:5px;font-size:11px}
+  .src-h{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+  .src-h b{color:var(--brand);font-size:10.5px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .chip{background:#fff;border:1px solid #c6e4e2;color:#0f6f6b;border-radius:16px;padding:5px 11px;font-size:11px;cursor:pointer;transition:.15s;font-family:inherit}
+  .chip:hover{background:var(--accent-bg)}
+  .memcard{background:#f0f7fe;border:1px solid #c3ddf8;border-radius:8px;padding:10px 12px;margin-top:9px}
+  .memcard-t{font-size:10.5px;font-weight:700;color:#1a56db;margin-bottom:6px;letter-spacing:.3px}
+  .chat-in{border-top:1px solid var(--line);padding:11px 14px}
+  .chat-in-row{display:flex;gap:8px;align-items:flex-end}
+  .chat-in textarea{min-height:42px;max-height:110px}
+  .chat-meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px;font-size:10.5px;color:var(--ink-3);gap:10px;flex-wrap:wrap}
+  .side-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 15px;margin-bottom:12px}
+  .side-t{font-size:11.5px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .usage{font-size:11px;color:var(--ink-3);line-height:1.9;font-variant-numeric:tabular-nums}
+  .usage b{color:var(--ink-2);font-weight:500}
+
+  /* ---------------- output ---------------- */
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+  .tab{padding:9px 15px;cursor:pointer;font-size:12.5px;color:var(--ink-2);border-bottom:2px solid transparent;font-weight:500;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:var(--brand);border-bottom-color:var(--accent);font-weight:700}
+  /* ---- 資料アウトプット ---- */
+  .gen-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .gen-row select{flex:1 1 300px;max-width:440px;width:auto}
+  .orow{display:flex;align-items:center;gap:11px;padding:12px 2px;border-top:1px solid var(--line)}
+  .orow:first-child{border-top:none;padding-top:4px}
+  .ocard-ic{font-size:17px;line-height:1.3;flex-shrink:0}
+  .orow-main{min-width:0;flex:1}
+  .ocard-t{font-size:13px;font-weight:700}
+  .ocard-s{font-size:10.5px;color:var(--ink-3);margin-top:3px;font-variant-numeric:tabular-nums}
+  .orow-act{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+  .ocard-ver{border:none;background:none;font-family:inherit;font-size:11px;color:var(--ink-2);cursor:pointer;padding:4px 7px;border-radius:5px;white-space:nowrap}
+  .ocard-ver:hover{background:#f2f5f4}
+  .ibtn{border:1px solid var(--line);background:#fff;border-radius:7px;width:29px;height:27px;font-size:12px;color:var(--ink-2);cursor:pointer;font-family:inherit;line-height:1}
+  .ibtn:hover{border-color:#b9d9d7;color:var(--ink)}
+  .ibtn.del:hover{border-color:#f3c9c9;background:#fdeaea;color:var(--err)}
+  .lnk{border:none;background:none;font-family:inherit;font-size:11.5px;color:var(--brand);cursor:pointer;padding:4px 6px;border-radius:5px;white-space:nowrap}
+  .lnk:hover{text-decoration:underline}
+  .overs{background:#f7f9f9;border-top:1px solid var(--line);padding:2px 14px;margin:0 -15px}
+  .over{display:flex;align-items:center;gap:7px;padding:8px 2px;font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+  .over+.over{border-top:1px solid #e9eeed}
+  .over .ibtn{width:26px;height:24px;font-size:11px}
+  .over .btn{margin-left:auto}
+  .prog{height:5px;border-radius:3px;background:#eef2f1;overflow:hidden;margin-top:7px;max-width:340px}
+  .prog i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .5s}
+  .spin{width:15px;height:15px;border:2px solid #d9e6e5;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .out-empty{padding:14px 2px;font-size:11.5px;color:var(--ink-3)}
+  .split{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff}
+  .pane-hd{padding:8px 13px;background:#fbfcfc;border-bottom:1px solid var(--line);font-size:10.5px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .md-edit{width:100%;height:400px;border:none;border-right:1px solid var(--line);padding:14px;font-family:ui-monospace,SFMono-Regular,monospace;font-size:11.5px;line-height:1.8;resize:none;border-radius:0}
+  .md-edit:focus{box-shadow:none}
+  .md-prev{max-height:60vh;overflow-y:auto;padding:16px 20px;font-size:12.5px;line-height:1.8}
+  .md-prev h1{font-size:18px;margin:0 0 11px;padding-bottom:7px;border-bottom:2px solid var(--accent)}
+  .md-prev h2{font-size:14.5px;margin:16px 0 7px;color:var(--brand)}
+  .md-prev p{margin-bottom:8px}
+  .md-prev ul{margin:0 0 9px 19px}
+  .md-prev li{margin-bottom:3px}
+  .md-prev table{margin:7px 0 12px;font-size:11.5px;width:100%;border-collapse:collapse}
+  .md-prev th,.md-prev td{border:1px solid var(--line);padding:5px 8px;text-align:left}
+  .md-prev th{background:#fbfcfc}
+
+  /* ---------------- memory ---------------- */
+  .cat{font-size:9.5px;font-weight:700;color:var(--brand);background:var(--accent-bg);padding:2px 7px;border-radius:4px;font-family:ui-monospace,monospace;letter-spacing:.4px}
+  .card.slim{padding:9px 14px}
+  .stats{display:flex;align-items:center;gap:8px 22px;flex-wrap:wrap}
+  .stats>div{display:flex;align-items:baseline;gap:6px}
+  .stat-l{font-size:11px;color:var(--ink-2)}
+  .stat-v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+
+  /* memory table */
+  .mem-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .mem-search{position:relative;flex:1;min-width:220px;max-width:360px}
+  .mem-search input{padding-left:31px}
+  .mem-search .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--ink-3);pointer-events:none}
+  .mem-bar select{width:auto;min-width:150px;font-size:12.5px}
+  .mem-count{margin-left:auto;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .mem-t td{vertical-align:top}
+  .mem-t tbody tr:hover{background:#fbfefe}
+  .mem-t tbody tr:last-child td{border-bottom:none}
+  .mem-t .c-cat{font-size:10.5px;color:var(--ink-3);font-family:ui-monospace,SFMono-Regular,monospace;letter-spacing:.2px}
+  .mem-t .c-item{font-size:12.5px;font-weight:700;line-height:1.55;margin-top:2px;word-break:break-word}
+  .mem-t .c-conf{font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
+  .mem-t .c-scope{font-size:11.5px;color:var(--ink-2);font-family:ui-monospace,SFMono-Regular,monospace}
+  .mem-t .c-at{font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .mem-t .c-src{font-size:11.5px;color:var(--brand);cursor:pointer;word-break:break-all}
+  .mem-t .c-acts{display:flex;gap:6px;flex-wrap:nowrap;justify-content:flex-end;white-space:nowrap}
+  .mem-t .c-acts .btn{flex:0 0 auto}
+  .mem-t .c-src:hover{text-decoration:underline}
+  .mem-t .c-loc{font-size:10.5px;color:var(--ink-3);margin-top:2px}
+  .mem-empty{padding:28px 14px;text-align:center;font-size:12px;color:var(--ink-3)}
+
+  /* knowledge transfer (A8) */
+  .tr{display:grid;grid-template-columns:minmax(0,350px) minmax(0,1fr);gap:16px;align-items:start}
+  .tr-step{border:1px solid var(--line);border-radius:9px;background:#fff;margin-bottom:11px;overflow:hidden}
+  .tr-step-hd{display:flex;align-items:center;gap:8px;padding:9px 12px;background:#fbfcfc;border-bottom:1px solid var(--line);font-size:12px;font-weight:700}
+  .tr-n{width:18px;height:18px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;flex-shrink:0}
+  .tr-step-bd{padding:11px 12px}
+  .tr-prj{font-size:11px;color:var(--ink-2);margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .tr-cat{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid #f2f4f4;font-size:12.5px;cursor:pointer}
+  .tr-cat:last-child{border-bottom:none}
+  .tr-cat.off{opacity:.5;cursor:not-allowed}
+  .tr-cat .n{margin-left:auto;font-size:10.5px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tr-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .tr-sum{font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums;margin-left:auto}
+  .tr-empty{border:1px dashed #d7dcdb;border-radius:9px;padding:36px 16px;text-align:center;color:var(--ink-3);font-size:12px;line-height:1.9;background:#fbfcfc}
+  .tr-item{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:8px;background:#fff}
+  .tr-item.ex{background:#fbfcfc}
+  .tr-item.ex .tr-item-t{color:var(--ink-3);text-decoration:line-through}
+  .tr-item-t{font-size:12.5px;font-weight:500;line-height:1.55;word-break:break-word}
+  .tr-item-s{font-size:10.5px;color:var(--ink-3);margin-top:5px}
+  .tr-item-m{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700}
+  .pill.in{background:#e2f5ef;color:#0a6b4c}
+  .pill.out{background:#eef0f1;color:#57606a}
+  .pill.done{background:var(--accent-bg);color:#0f6f6b}
+
+  /* dialog */
+  .modal-dlg{max-width:540px}
+  .dlg-dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 16px;font-size:12.5px;line-height:1.6}
+  .dlg-dl dt{color:var(--ink-2);font-size:11.5px;white-space:nowrap}
+  .dlg-list{border:1px solid var(--line);border-radius:8px;max-height:196px;overflow-y:auto;margin-top:12px}
+  .dlg-list li{list-style:none;padding:8px 11px;border-bottom:1px solid #f2f4f4;font-size:12px;line-height:1.55}
+  .dlg-list li:last-child{border-bottom:none}
+  .warn-box{background:#fffbf2;border:1px solid #f4dcb4;border-radius:8px;padding:10px 12px;font-size:11.5px;color:#8a5a08;line-height:1.8;margin-top:12px}
+  .ok-box{background:#effaf4;border:1px solid #bfe6d4;border-radius:8px;padding:10px 12px;font-size:11.5px;color:#0a6b4c;line-height:1.8;margin-top:12px}
+  .dlg-form .field{margin-bottom:12px}
+  .dlg-form .field:last-of-type{margin-bottom:0}
+  .dlg-form textarea{min-height:62px;font-size:12.5px}
+  .ai-ref{background:#fbfcfc;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:11.5px;color:var(--ink-2);line-height:1.9;margin-top:12px}
+  .ai-ref b{color:var(--ink);font-weight:500}
+  .ai-ref .lb{display:inline-block;min-width:74px;color:var(--ink-3);font-size:10.5px}
+  .dlg-err{display:none;color:var(--err);font-size:11.5px;font-weight:500;margin-top:10px}
+  .tag-ed{display:inline-flex;align-items:center;padding:1px 6px;border-radius:4px;background:#fdf3e3;color:#b45309;font-size:9.5px;font-weight:700;margin-left:6px;letter-spacing:.2px}
+
+  /* ---------------- modal ---------------- */
+  .mask{position:fixed;inset:0;background:rgba(17,24,39,.45);display:none;z-index:60;padding:22px;overflow-y:auto}
+  .mask.open{display:flex;align-items:flex-start;justify-content:center}
+  .modal{background:#fff;border-radius:12px;width:100%;max-width:940px;margin:auto;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+  .modal-hd{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+  .modal-hd h2{font-size:15px;font-weight:700}
+  .modal-hd p{font-size:11.5px;color:var(--ink-2);margin-top:5px;line-height:1.7;max-width:640px}
+  .modal-bd{padding:16px 20px 20px}
+  .x{background:none;border:none;font-size:21px;color:var(--ink-3);cursor:pointer;line-height:1;padding:0 4px;font-family:inherit}
+  .x:hover{color:var(--ink)}
+  .rt{width:100%;border-collapse:collapse;font-size:11.5px}
+  .rt th{text-align:left;padding:8px 9px;background:#fbfcfc;border-bottom:1px solid var(--line);font-size:10.5px;color:var(--ink-2);font-weight:500;white-space:nowrap}
+  .rt td{padding:9px;border-bottom:1px solid #f2f4f4;vertical-align:top;line-height:1.6}
+  .rt .m{font-family:ui-monospace,SFMono-Regular,monospace;font-size:10.5px;color:var(--ink-2);word-break:break-all}
+
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:94vw;background:#fff;box-shadow:-6px 0 28px rgba(0,0,0,.15);transform:translateX(100%);transition:transform .22s;z-index:70;display:flex;flex-direction:column}
+  .drawer.open{transform:translateX(0)}
+  .drawer-hd{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  .drawer-bd{flex:1;overflow-y:auto;padding:17px 18px}
+  .drawer-ft{padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;background:#fbfcfc}
+
+  /* ---------------- 資料追加モーダル ---------------- */
+  .modal-add{max-width:680px}
+  .modal-ft{padding:12px 20px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fbfcfc;border-radius:0 0 12px 12px;flex-wrap:wrap}
+  .tabs-pad{padding:0 20px}
+  .add-bd{max-height:60vh;overflow-y:auto}
+  .tree-tools{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .tree-tools input{flex:1;padding:7px 10px;border:1px solid #d7dcdb;border-radius:6px;font-size:12px;font-family:inherit}
+  .tree{border:1px solid var(--line);border-radius:8px;padding:6px;max-height:300px;overflow:auto}
+  .tr-row{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:6px;font-size:12.5px;line-height:1.5}
+  .tr-row:hover{background:#f7f9f9}
+  .tr-dir{cursor:pointer;font-weight:600}
+  .tr-car{width:11px;color:var(--ink-3);font-size:9px}
+  .tr-file label{display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer}
+  .tr-file input{accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+  .tr-file input:disabled{cursor:not-allowed}
+  .tr-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tr-meta{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .tr-path{font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+  .tr-sub{font-size:10.5px;color:var(--ink-3);padding:0 7px 6px 34px}
+  .tr-none{padding:16px;text-align:center;font-size:11.5px;color:var(--ink-3)}
+  .tag-reg{background:var(--accent-bg);color:var(--brand);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700}
+  .drop.on{border-color:var(--accent);background:#eefaf9}
+  .fl{display:flex;align-items:center;gap:9px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;margin-top:8px;font-size:12px}
+  .fl .tr-name{flex:1;min-width:60px}
+  .fl select{padding:4px 7px;font-size:11px;border:1px solid #d7dcdb;border-radius:5px;font-family:inherit;margin-left:auto;max-width:150px}
+  .fl .x{font-size:17px}
+  .chat-att{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .ref-lb{font-size:11px;color:var(--ink-2);display:inline-flex;align-items:center;gap:5px}
+  .ref-lb .muted{font-size:10.5px}
+  .mock-sw{font-size:10.5px;color:var(--ink-3);display:inline-flex;align-items:center;gap:4px;cursor:pointer;white-space:nowrap}
+  .mock-sw input{margin:0}
+  .th-s.none{font-style:italic;opacity:.75}
+  .chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:100%;padding:24px 18px;color:var(--ink-2)}
+  .chat-empty-ic{font-size:26px;opacity:.5;margin-bottom:10px}
+  .chat-empty-t{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:7px}
+  .chat-empty-s{font-size:11.5px;line-height:1.8;color:var(--ink-3);max-width:460px}
+  .chat-empty-ex{font-size:10.5px;color:var(--ink-3);margin:16px 0 -2px;letter-spacing:.06em}
+  .chat-empty .chips{justify-content:center}
+  .bub.typing{display:flex;align-items:center;gap:8px;color:var(--ink-3)}
+  .ava.err{background:#fdeaea;color:#b91c1c}
+  .bub.err{background:#fdf6f6;border:1px solid #f3c9c9}
+  .err-code{font-family:ui-monospace,monospace;font-size:11px;color:#b91c1c;margin:4px 0 6px}
+  .err-act{margin-top:9px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .rp-list{max-height:320px;overflow-y:auto;border:1px solid var(--line);border-radius:8px}
+  .rp{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:12px;border-bottom:1px solid var(--line);cursor:pointer}
+  .rp:last-child{border-bottom:none}
+  .rp:hover{background:var(--accent-bg)}
+  .rp.off{opacity:.5;cursor:not-allowed;background:#fafbfb}
+  .rp.off:hover{background:#fafbfb}
+  .rp-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rp-m{font-size:10.5px;color:var(--ink-3)}
+  .ref-chip{display:inline-flex;align-items:center;gap:5px;background:var(--accent-bg);color:var(--brand);border-radius:14px;padding:3px 5px 3px 10px;font-size:11px;max-width:230px}
+  .ref-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ref-chip button{background:none;border:none;color:inherit;cursor:pointer;font-size:13px;line-height:1;padding:0 3px;font-family:inherit}
+  .ref-chip.wait{background:#fdf3e3;color:#b45309}
+  .ref-chip.bad{background:#fdeaea;color:#b91c1c}
+  .ref-chip .spin{width:10px;height:10px;border-width:1.6px}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(150%);background:#1f2937;color:#fff;padding:10px 18px;border-radius:8px;font-size:12px;z-index:90;transition:transform .25s;box-shadow:0 6px 20px rgba(0,0,0,.22);max-width:90vw;text-align:center}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+  /* ---------------- responsive ---------------- */
+  @media(max-width:1000px){
+    .rev{grid-template-columns:220px minmax(0,1fr)}
+    .ex-hd{grid-template-columns:1fr;gap:10px}
+    .ex-hd-r{min-width:0}
+    .sum-row{justify-content:flex-start}
+  }
+  @media(max-width:1240px){
+    .chat-wrap{grid-template-columns:200px minmax(0,1fr)}
+  }
+  @media(max-width:860px){
+    .chat-wrap{grid-template-columns:1fr}
+    .th-col{max-height:250px}
+  }
+  @media(max-width:860px){
+    .app{flex-direction:column;height:auto;min-height:100%;overflow:visible}
+    .sidebar{width:100%;min-width:0;flex-direction:row;align-items:stretch;overflow-x:auto;padding:0 4px}
+    .sidebar-logo,.nav-label{display:none}
+    .nav-item{border-left:none;border-bottom:3px solid transparent;padding:12px;white-space:nowrap}
+    .nav-item.active{border-left-color:transparent;border-bottom-color:var(--accent-soft)}
+    .main{overflow:visible}
+    .header{height:auto;padding:9px 16px;flex-wrap:wrap;gap:8px;position:sticky;top:env(safe-area-inset-top,0px);z-index:30}
+    .content{overflow:visible;padding:16px}
+    .rev{grid-template-columns:1fr}
+    .tr{grid-template-columns:1fr}
+    .split{grid-template-columns:1fr}
+    .md-edit{border-right:none;border-bottom:1px solid var(--line);height:260px}
+    .md-prev{height:auto;max-height:340px}
+    .mem-t{min-width:900px}
+    .mem-search{max-width:none}
+    .bub{max-width:88%}
+    .drawer{width:100%}
+    .mask{padding:12px}
+    .t{min-width:520px}
+    .rt{min-width:640px}
+  }
+  @media(max-width:480px){
+    .ep{display:none}
+    .orow{flex-wrap:wrap}
+    .orow-act{width:100%;justify-content:flex-start}
+  }
+
+  /* ---------------- 案件工程ステッパー ---------------- */
+  .wf{background:#fff;border-bottom:1px solid var(--line);padding:11px 20px 12px;flex-shrink:0;position:relative}
+  .wf-line{display:flex;align-items:flex-start;gap:16px}
+  .wf-hd{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding-top:6px}
+  .wf-hd b{font-size:12.5px;white-space:nowrap}
+  .wf-i{width:15px;height:15px;border-radius:50%;border:1px solid #cdd5d4;color:var(--ink-3);font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:help;position:relative;flex-shrink:0}
+  .wf-i:hover{border-color:var(--accent);color:var(--brand)}
+  .wf-i:hover::after{content:attr(data-tip);position:absolute;top:22px;left:-6px;z-index:50;width:max-content;max-width:340px;background:#2e3538;color:#fff;font-size:10.5px;font-weight:400;line-height:1.75;padding:8px 10px;border-radius:7px;box-shadow:0 8px 20px rgba(16,32,30,.22);text-align:left}
+  .wf-row{display:flex;align-items:flex-start;flex:1;min-width:0}
+  .wf-s{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:4px;cursor:pointer}
+  .wf-s::before,.wf-s::after{content:'';position:absolute;top:14px;height:2px;background:#e0e5e4}
+  .wf-s::before{left:0;right:50%}
+  .wf-s::after{left:50%;right:0}
+  .wf-s:first-child::before,.wf-s:last-child::after{display:none}
+  .wf-s.lf::before{background:var(--brand)}
+  .wf-s.rf::after{background:var(--brand)}
+  .wf-dot{width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid #d6dcdb;position:relative;z-index:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;transition:.15s}
+  .wf-s:hover .wf-dot{border-color:var(--accent-soft)}
+  .wf-s.done .wf-dot{background:var(--brand);border-color:var(--brand)}
+  .wf-s.now .wf-dot{border-width:3px;border-color:var(--brand);box-shadow:0 0 0 4px var(--accent-bg)}
+  .wf-s.sel .wf-dot{outline:2px solid var(--accent);outline-offset:3px}
+  .wf-lb{font-size:12px;font-weight:700;color:var(--ink-3);line-height:1.3;text-align:center}
+  .wf-s.done .wf-lb,.wf-s.now .wf-lb{color:var(--ink)}
+  .wf-sub{font-size:10px;color:var(--ink-3);line-height:1.4;text-align:center;min-height:14px;display:flex;align-items:center;gap:4px}
+  .wf-s.done .wf-sub{color:var(--brand)}
+  .wf-chip{font-size:8.5px;font-weight:700;letter-spacing:.3px;padding:1px 5px;border-radius:8px;background:#fdf0e1;color:#b45309;white-space:nowrap}
+  .wf-chip.off{background:#eef0f1;color:#6b7280}
+
+  .wf-pop{position:absolute;z-index:40;width:360px;background:#fff;border:1px solid var(--line);border-radius:9px;box-shadow:0 10px 28px rgba(16,32,30,.16);padding:12px 13px}
+  .wf-pop h4{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:9px}
+  .wf-pop .wf-x{margin-left:auto;border:none;background:none;color:var(--ink-3);font-size:14px;cursor:pointer;padding:2px 5px;border-radius:5px;font-family:inherit}
+  .wf-pop .wf-x:hover{background:#f1f4f4;color:var(--ink)}
+  .wf-sec{font-size:9.5px;font-weight:700;letter-spacing:.7px;color:var(--ink-3);margin:11px 0 5px}
+  .wf-sec:first-of-type{margin-top:0}
+  .wf-key{font-size:10.5px;line-height:1.75;color:var(--ink-2);background:#f7faf9;border:1px solid #e6eeed;border-radius:6px;padding:7px 9px;font-family:ui-monospace,SFMono-Regular,monospace;word-break:break-word}
+  .wf-key+.wf-key{margin-top:4px}
+  .wf-key b{color:#0f6f6b}
+  .wf-ev{display:flex;gap:8px;font-size:10.5px;line-height:1.6;padding:5px 0;border-top:1px dashed var(--line)}
+  .wf-ev:first-of-type{border-top:none}
+  .wf-ev time{color:var(--ink-3);font-family:ui-monospace,monospace;flex-shrink:0}
+  .wf-ev i{font-style:normal;color:var(--ink-3);font-family:ui-monospace,monospace;margin-left:auto;flex-shrink:0}
+  .wf-none{font-size:10.5px;color:var(--ink-3);line-height:1.7;padding:2px 0}
+  .wf-act{margin-top:11px;display:flex;gap:7px;align-items:center}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo"><b>E-Mind Platform</b><span>機能A ／ 案件情報AI</span></div>
+    <div class="nav-label">MENU</div>
+    <div class="nav-item active" data-page="p1" tabindex="0"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.8h-4l-1.5 2.6h-5L8 12.8H4"/><path d="M6.4 5.1 4 12.8v4.4A1.8 1.8 0 0 0 5.8 19h12.4a1.8 1.8 0 0 0 1.8-1.8v-4.4l-2.4-7.7A1.8 1.8 0 0 0 15.9 4H8.1a1.8 1.8 0 0 0-1.7 1.1z"/></svg></span><span class="nav-txt">資料インプット</span></div>
+    <div class="nav-item" data-page="p2" tabindex="0"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 11.7a8 8 0 0 1-8.6 8 8.8 8.8 0 0 1-3.5-.7L3.5 20.5l1.4-4.1a7.9 7.9 0 0 1-1.4-4.5 8 8 0 0 1 8.5-8 8 8 0 0 1 8.5 7.8z"/><path d="M12 8.1l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z"/></svg></span><span class="nav-txt">AIチャット</span></div>
+    <div class="nav-item" data-page="p3" tabindex="0"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11.5V18"/><path d="m9.4 15.4 2.6 2.6 2.6-2.6"/></svg></span><span class="nav-txt">資料アウトプット</span></div>
+    <div class="nav-item" data-page="p4" tabindex="0"><span class="nav-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 12v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6"/></svg></span><span class="nav-txt">プロジェクトメモリ</span></div>
+  </aside>
+
+  <div class="main">
+    <header class="header">
+      <div class="header-r">
+        <span class="user-name">山田</span>
+        <div class="avatar">山</div>
+      </div>
+    </header>
+
+    <!-- ================= 案件工程ステッパー ================= -->
+    <div class="wf" id="wfBar">
+      <div class="wf-line">
+        <div class="wf-hd">
+          <b>案件工程</b>
+          <span class="wf-i" data-tip="工程を手動でチェックを付け外しできます。">?</span>
+        </div>
+        <div class="wf-row" id="wfRow"></div>
+      </div>
+      <div class="wf-pop" id="wfPop" style="display:none"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- ================= 1. 資料インプット ================= -->
+      <section class="page active" id="p1">
+        <div class="page-hd">
+          <div>
+            <h1>資料インプット</h1>
+            <p>抽出候補を原本と照合し、プラットフォーム正本へ反映したうえで、確定済み情報をAIへ同期します。</p>
+          </div>
+          <div class="page-acts">
+            <button class="btn btn-primary" onclick="openAdd()">⬆ 資料を追加</button>
+          </div>
+        </div>
+
+
+        <div class="rev">
+          <!-- 登録資料 -->
+          <div class="col">
+            <div class="col-hd"><b>登録資料 <span class="api">A2</span></b><span class="muted" id="docCnt"></span></div>
+            <div class="col-bd" id="docList"></div>
+          </div>
+
+          <!-- 抽出候補 -->
+          <div class="col col-ex">
+            <div class="col-hd">
+              <label class="toggle"><input type="checkbox" id="onlyReview" onchange="drawEx()">要確認のみ</label>
+              <button class="btn btn-outline btn-sm" onclick="toast('A3 を再取得しました')">🔄</button>
+            </div>
+            <div class="ex-hd" id="exHd"></div>
+            <div class="ex-list" id="exList"></div>
+            <div id="exQ"></div>
+            <div class="resp">正本の編集・確定は<b>プラットフォーム側</b>の責務です。AI側へは確定済み情報のみを同期します。</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 2. AIチャット ================= -->
+      <section class="page" id="p2">
+        <div class="page-hd">
+          <div>
+            <h1>AIチャット</h1>
+            <p>登録資料（A3 解析完了分）と確定済み案件情報をもとに回答します。スレッドは案件ごとにプラットフォーム側で保持し、A4へは選択中スレッドの直近10件のみを送信します。<br>参照資料は<b>既定で全件</b>。添付するとA1で登録し、そのスレッドはその資料だけを参照します（<b>A4はファイルを直接受け取らない</b>ため、解析完了後に検索対象になります）。</p>
+          </div>
+        </div>
+
+        <div class="chat-wrap">
+          <!-- スレッド一覧 -->
+          <div class="th-col">
+            <button class="th-new" onclick="newTh()">＋ 新しいスレッド</button>
+            <div class="th-list" id="thList"></div>
+          </div>
+
+          <!-- チャット -->
+          <div class="chat">
+            <div class="chat-topbar">
+              <b id="thTitle" ondblclick="startRen(curTh)" title="ダブルクリックでスレッド名を変更" style="cursor:text"></b>
+              <span style="display:flex;align-items:center;gap:12px;margin-left:auto">
+                <span class="hist-warn" id="histWarn"></span>
+                <label class="mock-sw" title="A4が502/503を返したときのUIを確認するためのモック用スイッチです"><input type="checkbox" id="errMock">エラー応答を再現</label>
+              </span>
+            </div>
+            <div class="chat-log" id="chatLog"></div>
+            <div class="chat-in">
+              <div class="chat-att" id="refBar"></div>
+              <div class="chat-in-row">
+                <textarea id="chatIn" maxlength="4000" placeholder="例）安全扉センサーの型番と数量を教えてください。" oninput="cnt(this,'chatCnt',4000)" onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing&&event.keyCode!==229){event.preventDefault();send()}"></textarea>
+                <button class="btn btn-primary" id="sendBtn" onclick="send()">送信</button>
+              </div>
+              <div class="chat-meta">
+                <span id="chatScope"></span>
+                <span id="chatCnt">0 / 4,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 3. 資料アウトプット ================= -->
+      <section class="page" id="p3">
+        <div class="page-hd">
+          <div>
+            <h1>資料アウトプット <span class="scope-pill out">画面外スコープ</span></h1>
+            <p>A6／A7のAPI仕様は確定していますが、Airion側の現行UI検討には画面がありません。本画面はE-Mind側で用意する想定案です。</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div>
+            <div class="card-title">資料を生成する</div>
+            <div class="card-sub">確定済み案件情報と登録資料をもとにドラフトを作成します</div>
+          </div></div>
+          <div class="gen-row">
+            <select id="docTypeSel" onchange="pickType(this.value)"></select>
+            <button class="btn btn-primary" onclick="gen()">生成を開始</button>
+            <span class="muted" id="genHint">資料種別を選択してください</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-hd"><div>
+            <div class="card-title">生成済み資料</div>
+            <div class="card-sub">資料ごとに版を重ねて保持します。表示・ダウンロード・削除ができます。</div>
+          </div></div>
+          <div id="outList"></div>
+        </div>
+      </section>
+
+      <!-- ================= 4. プロジェクトメモリ ================= -->
+      <section class="page" id="p4">
+        <div class="page-hd">
+          <div>
+            <h1>プロジェクトメモリ <span class="scope-pill later">後続スコープ</span></h1>
+            <p>A5で取得した<b>資料解析結果</b>を一覧します。内容を<b>修正してから確定</b>でき、確定・却下・削除の結果はプラットフォーム側で正本として保持します。</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active" data-sub="m1">案件情報</button>
+          <button class="tab" data-sub="m2">情報引き継ぎ</button>
+        </div>
+
+        <div id="m1">
+          <div class="card slim">
+            <div class="stats">
+              <div><div class="stat-l">未確認の候補</div><div class="stat-v" style="color:#1a56db" id="stCand">0</div></div>
+              <div><div class="stat-l">要確認</div><div class="stat-v" style="color:#c2410c" id="stReq">0</div></div>
+              <div><div class="stat-l">確定済み</div><div class="stat-v" style="color:#0a6b4c" id="stConf">0</div></div>
+              <div><div class="stat-l">反映済み</div><div class="stat-v" style="color:#0f6f6b" id="stApp">0</div></div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="mem-bar">
+              <div class="mem-search">
+                <span class="ic">&#128269;</span>
+                <input type="text" id="memQ" placeholder="カテゴリ・内容・資料名で検索" oninput="drawMem()">
+              </div>
+              <select id="memSt" onchange="drawMem()">
+                <option value="">すべての状態</option>
+                <option value="candidate">candidate</option>
+                <option value="requiresReview">requiresReview</option>
+                <option value="pending">pending</option>
+                <option value="confirmed">confirmed</option>
+                <option value="applied">applied</option>
+                <option value="superseded">superseded</option>
+                <option value="rejected">rejected</option>
+              </select>
+              <select id="memScope" onchange="drawMem()">
+                <option value="">すべてのscope</option>
+                <option value="project">project</option>
+                <option value="customer">customer</option>
+                <option value="internal">internal</option>
+                <option value="diff">diff</option>
+              </select>
+              <button class="btn btn-outline" onclick="toast('CSVを出力しました（プラットフォーム側機能・AI APIなし）')">⬇ CSV出力</button>
+              <span class="mem-count" id="memCount">0件</span>
+            </div>
+            <div class="tbl-wrap">
+              <table class="t mem-t">
+                <thead><tr>
+                  <th style="min-width:230px">項目</th>
+                  <th style="width:116px">状態</th>
+                  <th style="width:62px">確度</th>
+                  <th style="width:92px">管理区分<span class="muted" style="margin-left:4px">scope</span></th>
+                  <th style="min-width:180px">根拠</th>
+                  <th style="width:88px">更新日時</th>
+                  <th style="width:146px">操作</th>
+                </tr></thead>
+                <tbody id="memBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="note">
+            この画面はAIが解析した結果（A5）を表示します。<b>修正・確定・却下・削除・CSV出力</b>はプラットフォーム側のUIで行い、結果を正本として保持します。人が修正した項目は <span class="tag-ed">手動修正</span> と表示され、元のAI抽出値は編集画面で確認できます。AIへ送り返す同期処理はありません。
+          </div>
+        </div>
+
+        <div id="m2" style="display:none">
+          <div class="card">
+            <div class="card-hd"><div>
+              <div class="card-title">案件間の情報引き継ぎ <span class="api">A8</span> <span class="scope-pill tbd">要確認</span></div>
+              <div class="card-sub">この案件の<b>確定済み情報</b>のみを他案件へ引き継ぎます。引き継ぎ先では candidate として登録され、先方案件のレビューを経てから確定されます。</div>
+            </div></div>
+            <div class="tr">
+              <div>
+                <div class="tr-step">
+                  <div class="tr-step-hd"><span class="tr-n">1</span>引き継ぎ先案件を選ぶ<span class="muted" style="margin-left:auto">targetProjectId</span></div>
+                  <div class="tr-step-bd">
+                    <select id="trPrj" onchange="trSetTarget(this.value)"></select>
+                    <div class="tr-prj" id="trPrjInfo"></div>
+                  </div>
+                </div>
+                <div class="tr-step">
+                  <div class="tr-step-hd"><span class="tr-n">2</span>引き継ぐカテゴリを選ぶ<span class="muted" style="margin-left:auto">scope</span></div>
+                  <div class="tr-step-bd">
+                    <div id="trCats"></div>
+                    <div class="tr-foot">
+                      <button class="btn btn-outline btn-xs" onclick="trAllCats(true)">すべて選択</button>
+                      <button class="btn btn-outline btn-xs" onclick="trAllCats(false)">すべて解除</button>
+                      <span class="tr-sum" id="trCatSum"></span>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-primary" id="trFetchBtn" onclick="trFetch()">引き継ぎ候補を取得</button>
+                <div class="muted" id="trHint" style="display:block;margin-top:8px;line-height:1.7"></div>
+              </div>
+              <div>
+                <div class="side-t"><span><span class="tr-n" style="display:inline-flex;vertical-align:-3px;margin-right:6px">3</span>引き継ぎ候補のレビュー</span><span class="muted" id="trCount"></span></div>
+                <div id="trPanel"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ 責任範囲モーダル ============ -->
+<div class="mask" id="mdMask" onclick="if(event.target===this)closeMd()">
+  <div class="modal" role="dialog" aria-label="生成資料">
+    <div class="modal-hd">
+      <div><h2 id="mdmTitle"></h2><p id="mdmSub"></p></div>
+      <button class="x" onclick="closeMd()" aria-label="閉じる">×</button>
+    </div>
+    <div class="md-prev" id="mdOut"></div>
+    <div class="modal-ft">
+      <span class="muted">体裁・PDF化・保存はプラットフォーム側で行います。</span>
+      <button class="btn btn-outline btn-sm" onclick="toast('ダウンロードを開始しました')">↓ ダウンロード</button>
+    </div>
+  </div>
+</div>
+
+<div class="mask" id="respMask" onclick="if(event.target===this)closeResp()">
+  <div class="modal" role="dialog" aria-label="画面／API・責任範囲">
+    <div class="modal-hd">
+      <div>
+        <h2>画面／API・責任範囲</h2>
+        <p>正本データと原本ファイルは<b>プラットフォーム側</b>で保持します。AI側は解析・回答用の派生データを保持し、確定済み情報はプラットフォームから同期されます。</p>
+      </div>
+      <button class="x" onclick="closeResp()" aria-label="閉じる">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="tbl-wrap"><table class="rt" id="respTbl">
+        <thead><tr><th>画面・操作</th><th>API</th><th>表示・利用項目</th><th>判断</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 確認・通知ダイアログ ============ -->
+<div class="mask" id="dlgMask" onclick="if(event.target===this)closeDlg()">
+  <div class="modal modal-dlg" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <div class="modal-hd">
+      <div><h2 id="dlgTitle"></h2><p id="dlgSub"></p></div>
+      <button class="x" onclick="closeDlg()" aria-label="閉じる">×</button>
+    </div>
+    <div class="modal-bd" id="dlgBody"></div>
+    <div class="modal-ft">
+      <span class="muted" id="dlgNote"></span>
+      <span style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-outline" id="dlgCancel" onclick="closeDlg()">キャンセル</button>
+        <button class="btn btn-primary" id="dlgOk">OK</button>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 資料追加モーダル ============ -->
+<div class="mask" id="addMask" onclick="if(event.target===this)closeAdd()">
+  <div class="modal modal-add">
+    <div class="modal-hd">
+      <div>
+        <h2>＋ AIに読ませる資料を追加 <span class="api">A1</span></h2>
+        <p id="addWhere">登録すると解析が非同期で開始されます。</p>
+      </div>
+      <button class="x" onclick="closeAdd()" aria-label="閉じる">×</button>
+    </div>
+
+    <div class="tabs tabs-pad">
+      <button class="tab active" data-sub="inPick">プロジェクトのファイルから</button>
+      <button class="tab" data-sub="inUp">新しいファイルをアップロード</button>
+    </div>
+
+    <div class="modal-bd add-bd">
+
+      <!-- ① プロジェクト共有フォルダから選ぶ -->
+      <div id="inPick">
+        <div class="tree-tools">
+          <input type="search" id="treeQ" placeholder="ファイル名で絞り込み…" oninput="drawTree()">
+          <span class="muted" id="treeHint"></span>
+        </div>
+        <div class="tree" id="tree"></div>
+        <div class="note">プロジェクトのファイル共有にある原本を参照登録します。原本はプラットフォーム側が保持し、AIへは参照（fileUrl）のみを渡します。資料種別は拡張子から自動判定します。</div>
+      </div>
+
+      <!-- ② 新しいファイルをアップロード -->
+      <div id="inUp" style="display:none">
+        <div class="drop" id="dropZone" onclick="document.getElementById('fileIn').click()">
+          <div style="font-size:20px;margin-bottom:6px">⬆</div>
+          <div style="font-size:12.5px;font-weight:500">ここにファイルをドラッグ＆ドロップ、またはクリックして選択</div>
+          <div class="muted" style="margin-top:5px">PDF・DXF・STEP・XLSX ／ 1ファイル 20MiB まで ・ 最大10ファイル</div>
+        </div>
+        <input type="file" id="fileIn" multiple hidden accept=".pdf,.dxf,.dwg,.step,.stp,.xlsx,.xls" onchange="pickUp(this.files)">
+        <div id="upList"></div>
+        <div class="note">アップロードしたファイルは、プロジェクトのファイル共有にも保存されます（正本はプラットフォーム側）。</div>
+      </div>
+
+    </div>
+
+    <div class="modal-ft">
+      <span class="muted" id="addCnt">ファイルが選択されていません</span>
+      <span style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="closeAdd()">キャンセル</button>
+        <button class="btn btn-primary" id="addBtn" onclick="addDoc()" disabled>AIに登録</button>
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ===================== data ===================== */
+const STATUS_JA={queued:'実行待ち',processing:'処理中',completed:'解析完了',failed:'解析失敗'};
+const ITEM_JA={candidate:'candidate',pending:'pending',confirmed:'confirmed',applied:'applied',requiresReview:'requiresReview',rejected:'rejected',superseded:'superseded'};
+
+let docs=[
+ {id:'doc_001',name:'制御盤_BOM_rev3.pdf',ic:'📗',src:'bom',srcJa:'BOM',status:'completed',at:'16:12',
+  items:[
+   {cat:'safetySpec',txt:'安全扉センサー GC-2000：3個',st:'candidate',c:.96,page:1,sec:'BOM行 2'},
+   {cat:'controlDevices',txt:'非常停止ボタン EM-100：2個',st:'candidate',c:.94,page:1,sec:'BOM行 3'},
+   {cat:'controlDevices',txt:'PLC CPU KV-8000（KEYENCE）：1台',st:'candidate',c:.93,page:1,sec:'BOM行 4'},
+   {cat:'material',txt:'安全扉センサー材質：SUS304',st:'requiresReview',c:.72,page:1,sec:'BOM行 2',why:'材質欄の記載が1行目にのみあり、他の品目に適用されるか判断できません。'}
+  ],
+  q:['安全扉センサーの材質SUS304を確定情報として反映しますか？',
+     '盤の電源は200Vですか、400Vですか？BOMには明記されていません。',
+     'PLCは KV-8000 で確定でよろしいですか？旧仕様書には KV-7500 の記載があります。']},
+ {id:'doc_002',name:'装置全体図_02.pdf',ic:'📐',src:'drawing',srcJa:'図面',status:'completed',at:'15:48',
+  items:[
+   {cat:'equipmentOverview',txt:'対象装置は搬送ライン（全長 12,400mm）',st:'candidate',c:.91,page:1,sec:'図面枠'},
+   {cat:'controlDevices',txt:'制御盤は装置右端に1面設置',st:'candidate',c:.68,page:1,sec:'平面図',why:'図面の記号から読み取った位置で、仕様書とは未照合です。'}
+  ],q:[]},
+ {id:'doc_003',name:'センサーブラケット.pdf',ic:'📘',src:'cad',srcJa:'CAD',status:'completed',at:'15:30',
+  items:[{cat:'material',txt:'ブラケット材質：SPCC t2.0',st:'candidate',c:.63,page:1,sec:'部品欄',why:'板厚が欄外の手書きメモに記載されており、本表にはありません。'}],q:[]},
+ {id:'doc_004',name:'旧設備仕様書.pdf',ic:'📄',src:'spec',srcJa:'仕様書',status:'failed',at:'15:02',items:[],q:[],
+  fc:'unsupportedMimeType',fr:'対応していないファイル形式です。'}
+];
+let cur=0, focusIt=null, editIdx=null, delAsk=null;
+
+const RESP=[
+ ['A1 資料追加','POST','/v1/projects/{projectId}/knowledge/documents','documentId, jobId, status','利用','now'],
+ ['A2 登録資料一覧','GET','/v1/projects/{projectId}/knowledge/documents','fileName, sourceType, status','利用','now'],
+ ['A3 解析レビュー','GET','/v1/projects/{projectId}/knowledge/documents/{documentId}','status, extractedItems, followUpQuestions, confidence, page, section, sourceId, failureCode','利用','now'],
+ ['解析再実行','POST','/v1/projects/{projectId}/knowledge/documents/{documentId}/analysis/retry','jobId, status, scheduled, failureCode, failureReason','利用','now'],
+ ['確定済み情報の同期','PUT','/v1/projects/{projectId}/memory/confirmed','memoryId, category, content, sourceDocumentIds','利用','now'],
+ ['A4 AI質問・修正候補','POST','/v1/projects/{projectId}/chat','reply, intent, memoryUpdates[].confidence, sources, followUpQuestions','利用','now'],
+ ['A5 解析メモリ','GET','/v1/projects/{projectId}/memory','資料解析結果のみ。確定済み正本はプラットフォーム側で統合','後続','later'],
+ ['A6/A7 資料生成・結果取得','POST/GET','/v1/projects/{projectId}/documents/generate ／ /v1/documents/jobs/{jobId}','jobId, status, content, resultFileUrl, format, failureCode','画面外','out'],
+ ['A8 案件間の情報引き継ぎ','POST','/v1/projects/{projectId}/knowledge/transfer','scope, transferredCount, items','要確認','tbd'],
+ ['資料削除','DELETE','/v1/projects/{projectId}/knowledge/documents/{documentId}','削除同期・冪等性','利用','now'],
+ ['確定済み情報の削除','DELETE','/v1/projects/{projectId}/memory/confirmed/{memoryId}','削除同期・冪等性','利用','now'],
+ ['案件データ削除','DELETE','/v1/projects/{projectId}/feature-a-data','案件単位の派生データ削除','利用','now'],
+ ['メモリ編集・CSV出力UI','—','AI APIなし','プラットフォーム側 正本の編集・出力','対象外','out'],
+ ['（共通）管理区分','—','scope: project / customer / internal / diff','A1・A4(scopes)・確定情報で共通。既定はproject。A8のscopeはcategory名で別物','利用','now']
+];
+
+const DOC_TYPES=[
+ {c:'roughQuote',ic:'💴',t:'概算見積',d:'装置構成と数量から概算金額を算出'},
+ {c:'schedule',ic:'📅',t:'スケジュール',d:'設計・製作・据付のマイルストーン'},
+ {c:'systemConfig',ic:'🗂️',t:'システム構成図',d:'制御機器の構成と接続の一覧'},
+ {c:'customerProposal',ic:'📑',t:'ご提案書',d:'顧客提出用の提案ドラフト'},
+ {c:'kickoffMinutes',ic:'📝',t:'キックオフ議事録',d:'着手時の合意事項をまとめる'},
+ {c:'acceptanceReport',ic:'✅',t:'検収報告書',d:'検収項目と結果の報告書'},
+ {c:'operationManual',ic:'📘',t:'運用マニュアル',d:'操作手順・保守要領'}
+];
+/* 資料アウトプット：documentType ごとに版（version）を束ねて保持する */
+let outDocs=[
+ {c:'roughQuote',open:false,vers:[
+   {v:3,at:'今日 10:42',st:'completed'},
+   {v:2,at:'昨日 17:15',st:'completed'},
+   {v:1,at:'昨日 16:20',st:'completed'}]},
+ {c:'systemConfig',open:false,vers:[{v:1,at:'昨日 15:02',st:'completed'}]},
+ {c:'customerProposal',open:false,vers:[{v:1,at:'今日 11:04',st:'completed'}]}
+];
+
+const MEM=[
+ {id:'mem_001',cat:'safetySpec',k:'安全扉センサー',v:'GC-2000（3個）',st:'confirmed',c:.96,scope:'project',doc:'制御盤_BOM_rev3.pdf',page:1,sec:'BOM行 2',at:'9/11 12:42'},
+ {id:'mem_002',cat:'controlDevices',k:'非常停止ボタン',v:'EM-100（2個）',st:'candidate',c:.94,scope:'project',doc:'制御盤_BOM_rev3.pdf',page:1,sec:'BOM行 3',at:'9/11 12:40'},
+ {id:'mem_003',cat:'controlDevices',k:'PLC CPU',v:'KEYENCE KV-8000（1台）',st:'confirmed',c:.93,scope:'project',doc:'制御盤_BOM_rev3.pdf',page:1,sec:'BOM行 4',at:'9/11 12:31'},
+ {id:'mem_004',cat:'taktInfo',k:'タクトタイム',v:'12秒',st:'requiresReview',c:.71,scope:'customer',doc:'搬送ライン仕様書.pdf',page:4,sec:'能力条件',at:'9/11 11:58'},
+ {id:'mem_005',cat:'controlDevices',k:'I/Oユニット',v:'KV-NC32T（2台）',st:'applied',c:.92,scope:'project',doc:'制御盤_BOM_rev3.pdf',page:1,sec:'BOM行 5',at:'9/11 11:44'},
+ {id:'mem_006',cat:'equipmentOverview',k:'対象装置',v:'搬送ライン（全長 12,400mm）',st:'confirmed',c:.91,scope:'project',doc:'装置全体図_02.pdf',page:2,sec:'全体構成',at:'9/11 11:32'},
+ {id:'mem_007',cat:'material',k:'安全扉センサー材質',v:'SUS304',st:'requiresReview',c:.72,scope:'project',doc:'制御盤_BOM_rev3.pdf',page:1,sec:'BOM行 2',at:'9/11 11:20'},
+ {id:'mem_008',cat:'material',k:'センサーブラケット材質',v:'SPCC t2.0',st:'candidate',c:.88,scope:'project',doc:'センサーブラケット.pdf',page:1,sec:'TITLE BLOCK',at:'9/11 10:46'},
+ {id:'mem_009',cat:'equipmentOverview',k:'設置場所',v:'第2工場 A棟',st:'candidate',c:.78,scope:'customer',doc:'ヒアリングメモ.pdf',page:1,sec:'前提条件',at:'9/11 10:12'},
+ {id:'mem_010',cat:'controlDevices',k:'旧PLC記載',v:'KV-7500',st:'superseded',c:.55,scope:'diff',doc:'旧設備仕様書.pdf',page:2,sec:'構成表',at:'9/10 17:05'}
+];
+
+const MD_SAMPLE=`# ご提案書
+
+## 1. 対象装置
+搬送ライン（全長 12,400mm）の更新工事をご提案いたします。
+
+## 2. 制御機器構成
+| 品目 | 型番 | メーカー | 数量 |
+| --- | --- | --- | --- |
+| PLC CPU | KV-8000 | KEYENCE | 1 |
+| I/Oユニット | KV-NC32T | KEYENCE | 2 |
+| 安全扉センサー | GC-2000 | Example | 3 |
+| 非常停止ボタン | EM-100 | Example | 2 |
+
+## 3. 安全仕様
+- 安全扉センサー 3点による扉インターロック
+- 非常停止ボタン 2点（操作盤・現場側）
+
+## 4. ご確認事項
+安全扉センサーの材質SUS304について、確定情報としてよろしいかご確認ください。`;
+
+/* ===================== helpers ===================== */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const bdg=(st,ja)=>`<span class="bdg ${st}"><span class="dot"></span>${ja||st}</span>`;
+const CONF_TH=.75;
+const CAT_JA={equipmentOverview:'装置概要',controlDevices:'制御機器',safetySpec:'安全仕様',material:'材質',quantity:'数量',taktInfo:'タクト情報'};
+function conf(c){const col=c>=.85?'var(--ok)':c>=CONF_TH?'var(--accent)':'var(--warn)';
+ return `<span class="conf"><span class="conf-bar"><i style="width:${Math.round(c*100)}%;background:${col}"></i></span>${c.toFixed(2)}</span>`}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600)}
+
+/* ---------- 確認・通知ダイアログ ---------- */
+function openDlg(o){
+  $('#dlgTitle').innerHTML=o.title||'';
+  const sub=$('#dlgSub');sub.innerHTML=o.sub||'';sub.style.display=o.sub?'':'none';
+  $('#dlgBody').innerHTML=o.body||'';
+  $('#dlgNote').innerHTML=o.note||'';
+  const c=$('#dlgCancel');c.style.display=o.cancel===false?'none':'';c.textContent=o.cancelText||'キャンセル';
+  const ok=$('#dlgOk');ok.textContent=o.okText||'OK';ok.className='btn '+(o.okClass||'btn-primary');
+  ok.onclick=()=>{if(o.validate&&o.validate()===false)return;const f=o.onOk;closeDlg();if(f)f()};
+  $('#dlgMask').classList.add('open');ok.focus();
+}
+function closeDlg(){$('#dlgMask').classList.remove('open')}
+function informDlg(o){openDlg(Object.assign({},o,{cancel:false,okText:o.okText||'閉じる'}))}
+function cnt(el,id,max){const n=el.value.length,c=$('#'+id);
+ c.textContent=n.toLocaleString()+' / '+max.toLocaleString();c.classList.toggle('over',n>max)}
+
+/* ===================== nav ===================== */
+$$('.nav-item').forEach(n=>{
+  const go=()=>{$$('.nav-item').forEach(x=>x.classList.remove('active'));n.classList.add('active');
+    $$('.page').forEach(p=>p.classList.remove('active'));$('#'+n.dataset.page).classList.add('active');$('.content').scrollTop=0};
+  n.onclick=go; n.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+});
+function goPage(id){const n=document.querySelector('.nav-item[data-page="'+id+'"]');if(n)n.onclick()}
+$$('.tab').forEach(t=>t.onclick=()=>{
+  const sib=[...t.parentElement.children];sib.forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  if(t.dataset.sub){sib.forEach(x=>{const el=$('#'+x.dataset.sub);if(el)el.style.display='none'});$('#'+t.dataset.sub).style.display=''}
+  if(t.closest('#addMask'))syncAdd();
+});
+
+/* ===================== 1. review ===================== */
+function drawDocs(){
+  $('#docCnt').textContent=docs.length+'件';
+  $('#docList').innerHTML=docs.map((d,i)=>{
+    const col=d.status==='completed'?'var(--ok)':d.status==='failed'?'var(--err)':'var(--warn)';
+    if(delAsk===i)return `<div class="fcard-del">
+      <div class="fcard-del-t">${esc(d.name)} を削除しますか？</div>
+      <div class="fcard-del-d">AI側の解析結果・検索インデックスのみ削除します。<br>
+        原本ファイルはプラットフォーム側に残ります。<br>
+        確定済み案件情報も残り、根拠リンクだけ外れます。</div>
+      <div class="fcard-del-a">
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delDoc(${i})">削除する</button>
+        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();delAsk=null;drawDocs()">キャンセル</button>
+      </div></div>`;
+    return `<div class="fcard ${i===cur?'on':''}" onclick="sel(${i})" tabindex="0">
+      <button class="fcard-x" title="この資料を削除" onclick="event.stopPropagation();delAsk=${i};drawDocs()">×</button>
+      <span class="fcard-ic">${d.ic}</span>
+      <div><div class="fcard-n">${esc(d.name)}</div>
+      <div class="fcard-m"><span class="fdot" style="background:${col}"></span>${d.srcJa}・${STATUS_JA[d.status]}</div></div></div>`}).join('')
+    ||`<div style="text-align:center;padding:26px 10px;color:var(--ink-3);font-size:11.5px">資料がありません<br>「資料を追加」から登録してください</div>`;
+}
+function sel(i){cur=i;delAsk=null;focusIt=null;editIdx=null;drawDocs();drawEx()}
+
+function isQuick(i){return i.c>=CONF_TH&&i.st!=='requiresReview'}
+function exHtml(n){
+  const d=docs[cur],i=d.items[n],open=i.state==='open',ed=editIdx===n;
+  return `<div class="ex ${focusIt===n?'focus':''} ${open?'':'resolved'}" onclick="focusEx(${n})">
+    <div class="ex-cat">${CAT_JA[i.cat]||i.cat}</div>
+    <div class="ex-txt">${esc(i.txt)}</div>
+    <div class="ex-meta">${conf(i.c)}${open?'':bdg(i.state==='approved'?'applied':'rejected',i.state==='approved'?'applied':'rejected')}</div>
+    ${i.why&&open?`<div class="ex-why">⚠ ${esc(i.why)}</div>`:''}
+    <div class="ex-src" onclick="event.stopPropagation();focusEx(${n})">${esc(d.name)} · p.${i.page} · ${i.sec}</div>
+    ${ed?`<input type="text" class="editbox" id="edit${n}" value="${esc(i.txt)}" onclick="event.stopPropagation()">
+       <div class="ex-acts" onclick="event.stopPropagation()">
+         <button class="btn btn-primary btn-sm" onclick="saveEx(${n})">保存して正本へ反映</button>
+         <button class="btn btn-outline btn-sm" onclick="editIdx=null;drawEx()">キャンセル</button></div>`
+      :open?`<div class="ex-acts" onclick="event.stopPropagation()">
+         <button class="btn btn-primary btn-sm" onclick="decide(${n},'approved')">✓ 正本へ反映</button>
+         <button class="btn btn-outline btn-sm" onclick="editIdx=${n};drawEx()">✎ 修正して正本へ反映</button>
+         <button class="btn btn-danger btn-sm" onclick="decide(${n},'rejected')">✕ 却下</button></div>`:''}
+  </div>`;
+}
+function drawEx(){
+  const d=docs[cur],only=$('#onlyReview').checked;
+  $('#exHd').innerHTML=`<div class="ex-hd-l">
+      <div class="ex-hd-t">${esc(d.name)} ${bdg(d.status,d.status)}</div>
+      <div class="ex-hd-m"><span>sourceType: ${d.src}</span><span>scope: project</span><span>${d.at}更新</span></div>
+    </div><div class="ex-hd-r" id="exSum"></div><div></div>`;
+  if(d.status==='failed'){
+    $('#exList').innerHTML=`<div style="margin:12px;background:#fdf5f5;border:1px solid #f3c9c9;border-radius:9px;padding:13px">
+      <div style="font-size:12px;font-weight:700;color:#b91c1c;margin-bottom:7px">⚠ 解析に失敗しました</div>
+      <div style="font-size:11.5px;line-height:1.9">failureCode：<code style="font-family:ui-monospace,monospace;background:#fff;border:1px solid #f3c9c9;border-radius:3px;padding:1px 5px">${d.fc}</code><br>failureReason：${esc(d.fr)}</div>
+      <button class="btn btn-outline btn-sm" style="margin-top:11px" onclick="retry()">🔄 解析を再実行 <span class="api">retry</span></button></div>`;
+    $('#exQ').innerHTML='';return;
+  }
+  if(d.status!=='completed'){$('#exList').innerHTML=`<div style="text-align:center;padding:36px;color:var(--ink-3)">⏳ 解析中です（A3をポーリング）</div>`;
+    $('#exQ').innerHTML='';return}
+
+  const all=d.items.map((_,n)=>n);
+  const quick=all.filter(n=>isQuick(d.items[n])), review=all.filter(n=>!isQuick(d.items[n]));
+  const qOpen=quick.filter(n=>d.items[n].state==='open'), rOpen=review.filter(n=>d.items[n].state==='open');
+  let h='';
+  if(quick.length&&!only){
+    h+=`<div class="grp ${qOpen.length?'':'collapsed'}" id="grpQ">
+      <div class="grp-head" role="button" tabindex="0" onclick="tg('grpQ')">
+        <span class="grp-caret">▼</span><span class="grp-title">かんたん確認 ${quick.length}件</span>
+        ${qOpen.length?`<button class="btn btn-ok btn-xs" onclick="event.stopPropagation();bulkOk()">✓ ${qOpen.length}件をまとめて正本へ反映</button>`
+                      :`<span class="bdg completed"><span class="dot"></span>記録済み</span>`}</div>
+      <div class="grp-body">${quick.map(exHtml).join('')}</div></div>`;
+  }
+  if(review.length){
+    h+=`<div class="grp" id="grpR">
+      <div class="grp-head" role="button" tabindex="0" onclick="tg('grpR')">
+        <span class="grp-caret">▼</span><span class="grp-title">要確認 ${review.length}件</span>
+        ${rOpen.length?`<span class="bdg requiresReview">未判断 ${rOpen.length}件</span>`
+                      :`<span class="bdg completed"><span class="dot"></span>完了</span>`}</div>
+      <div class="grp-body">${review.map(exHtml).join('')}</div></div>`;
+  }
+  $('#exList').innerHTML=h||`<div style="text-align:center;padding:30px;color:var(--ink-3)">抽出項目はありません</div>`;
+  drawSum();
+  drawQ();
+}
+function drawQ(){
+  const d=docs[cur];
+  if(!d.q||!d.q.length){$('#exQ').innerHTML='';return}
+  const done=d.q.filter(x=>x.state!=='open').length;
+  let h=`<div class="qbox"><div class="qbox-t">⚑ 確認事項　${d.q.length}件中 ${done}件回答済み <span class="api">followUpQuestions</span></div>`;
+  d.q.forEach((x,n)=>{
+    h+=`<div class="qi ${x.state==='open'?'':'done'}">
+      <div class="qi-q"><span class="n">${n+1}.</span><span>${esc(x.q)}</span></div>`;
+    if(x.state==='open'){
+      h+=`<div class="qi-in">
+        <input type="text" id="qa${n}" placeholder="この場で回答を入力" value="${esc(x.draft||'')}"
+          oninput="docs[cur].q[${n}].draft=this.value" onkeydown="if(event.key==='Enter'&&!event.isComposing&&event.keyCode!==229)ansQ(${n})">
+        <button class="btn btn-primary btn-sm" onclick="ansQ(${n})">回答</button>
+        <button class="btn btn-outline btn-sm" onclick="skipQ(${n})">スキップ</button></div>`;
+    }else if(x.state==='skipped'){
+      h+=`<div class="qi-a">スキップしました　<button class="btn btn-outline btn-xs" onclick="reopenQ(${n})">やり直す</button></div>`;
+    }else{
+      h+=`<div class="qi-a">↳ <b>${esc(x.answer)}</b>　<button class="btn btn-outline btn-xs" onclick="reopenQ(${n})">回答し直す</button></div>`;
+      if(x.upd)h+=`<div class="qi-wrap">${updHtml(n,x.upd)}</div>`;
+    }
+    h+=`</div>`;
+  });
+  $('#exQ').innerHTML=h+`</div>`;
+  drawSum();
+}
+function updHtml(n,u){
+  const open=u.state==='open';
+  return `<div class="ex" style="cursor:default">
+    <div class="ex-cat">${CAT_JA[u.category]||u.category} <span class="api">memoryUpdates</span></div>
+    <div class="diff">
+      <div class="side"><span class="lb">現在の値</span>${u.before?esc(u.before):'<i>未登録</i>'}</div>
+      <div class="ar">→</div>
+      <div class="side to"><span class="lb">更新後</span>${esc(u.after)}</div></div>
+    <div class="ex-meta">${conf(u.confidence)}
+      ${open?'':bdg(u.state==='approved'?'applied':'rejected',u.state==='approved'?'applied':'rejected')}</div>
+    ${u.editing?`<input type="text" class="editbox" id="ued${n}" value="${esc(u.after)}">
+      <div class="ex-acts">
+        <button class="btn btn-primary btn-sm" onclick="saveUpd(${n})">保存して正本へ反映</button>
+        <button class="btn btn-outline btn-sm" onclick="docs[cur].q[${n}].upd.editing=false;drawQ()">キャンセル</button></div>`
+     :open?`<div class="ex-acts">
+      <button class="btn btn-primary btn-sm" onclick="decideUpd(${n},'approved')">✓ 正本へ反映</button>
+      <button class="btn btn-outline btn-sm" onclick="docs[cur].q[${n}].upd.editing=true;drawQ()">✎ 修正して正本へ反映</button>
+      <button class="btn btn-danger btn-sm" onclick="decideUpd(${n},'rejected')">✕ 却下</button></div>`:''}
+  </div>`;
+}
+function ansQ(n){
+  const x=docs[cur].q[n], v=(document.getElementById('qa'+n).value||'').trim();
+  if(!v){toast('回答を入力してください');return}
+  x.answer=v;x.state='answered';x.draft='';
+  toast('A4へ送信しました（history末尾＝この確認事項）');
+  setTimeout(()=>{x.upd=mockUpd(x);drawQ()},600);
+  drawQ();
+}
+function mockUpd(x){
+  return /材質|SUS/.test(x.q)
+    ? {category:'material',before:null,after:'安全扉センサー材質：SUS304',confidence:.95,state:'open'}
+    : {category:'controlDevices',before:'KV-7500',after:'KV-8000（KEYENCE）',confidence:.9,state:'open'};
+}
+function skipQ(n){docs[cur].q[n].state='skipped';drawQ();toast('スキップしました（A4は呼び出しません）')}
+function reopenQ(n){const x=docs[cur].q[n];x.state='open';x.upd=null;drawQ()}
+function decideUpd(n,st){docs[cur].q[n].upd.state=st;drawQ();
+ toast(st==='approved'?'正本へ反映しました（PUT /memory/confirmed で同期）':'却下しました')}
+function saveUpd(n){const u=docs[cur].q[n].upd,v=(document.getElementById('ued'+n).value||'').trim();
+ if(v)u.after=v; u.editing=false;u.state='approved';drawQ();toast('修正して正本へ反映しました')}
+function drawSum(){
+  const d=docs[cur],it=d.items;
+  const total=it.length;
+  const ok=it.filter(i=>i.state==='approved').length;
+  const rej=it.filter(i=>i.state==='rejected').length;
+  const open=total-ok-rej;
+  const qs=d.q||[], qDone=qs.filter(x=>x.state!=='open').length;
+  const pc=n=>total?(n/total*100).toFixed(1)+'%':'0%';
+  const el=document.getElementById('exSum'); if(!el)return;
+  el.innerHTML=`<div class="sum-row">
+      <span class="sum-i"><b>${total}</b>抽出項目</span>
+      <span class="sum-i ok"><b>${ok}</b>正本へ反映</span>
+      <span class="sum-i open"><b>${open}</b>未判断</span>
+      <span class="sum-i rej"><b>${rej}</b>却下</span>
+      ${qs.length?`<span class="sum-i q"><b>${qDone}/${qs.length}</b>確認事項</span>`:''}
+    </div>
+    <div class="sum-bar"><i class="ok" style="width:${pc(ok)}"></i><i class="rej" style="width:${pc(rej)}"></i></div>`;
+}
+function tg(id){document.getElementById(id).classList.toggle('collapsed')}
+function delDoc(i){
+  const name=docs[i].name, gone=docs[i].id;
+  docs.splice(i,1);
+  /* 削除した資料を参照していたスレッドの絞り込みから外す（0件になったら全件へ戻す） */
+  threads.forEach(t=>{if(t.docIds){t.docIds=t.docIds.filter(x=>x!==gone);if(!t.docIds.length)t.docIds=null}});
+  drawThreads();drawChat();
+  delAsk=null;
+  if(cur>=docs.length)cur=Math.max(0,docs.length-1); else if(i<cur)cur--;
+  focusIt=null;editIdx=null;
+  drawDocs();
+  if(docs.length){drawEx()}
+  else{$('#exHd').innerHTML='';$('#exList').innerHTML=`<div style="text-align:center;padding:40px;color:var(--ink-3)">資料を登録すると解析結果がここに表示されます</div>`;$('#exQ').innerHTML=''}
+  toast(`${name} を削除しました（DELETE /knowledge/documents/{documentId}）`);
+}
+function focusEx(n){focusIt=(focusIt===n?null:n);drawEx()}
+function decide(n,st){const i=docs[cur].items[n];i.state=st;editIdx=null;drawEx();
+ toast(st==='approved'?'正本へ反映しました（PUT /memory/confirmed で同期）':'却下しました')}
+function saveEx(n){const v=document.getElementById('edit'+n).value.trim();
+ if(v)docs[cur].items[n].txt=v;
+ docs[cur].items[n].state='approved';editIdx=null;drawEx();toast('修正して正本へ反映しました')}
+function bulkOk(){const d=docs[cur];let c=0;
+ d.items.forEach(i=>{if(isQuick(i)&&i.state==='open'){i.state='approved';c++}});
+ drawEx();toast(`${c}件を正本へ反映しました`)}
+function retry(){const d=docs[cur];d.status='processing';drawDocs();drawEx();toast('解析再実行を受け付けました（scheduled）');
+ setTimeout(()=>{d.status='completed';d.items=[{cat:'equipmentOverview',txt:'旧設備の主幹電源はAC200V 三相',st:'candidate',c:.84,page:1,sec:'1章',state:'open'}];d.q=[];drawDocs();drawEx();toast('A3 ポーリング：completed')},2600)}
+function syncConfirmed(){toast('確定済み情報をAIへ同期しました（PUT /memory/confirmed）')}
+/* add drawer */
+/* ===================== 資料追加モーダル（共有フォルダ ／ アップロード） ===================== */
+const SRC_JA={spec:'仕様書',drawing:'図面',cad:'CAD',bom:'部品表'};
+const MAXSEL=10;
+let TREE=[
+ {n:'01_客先支給',t:'d',c:[
+   {n:'仕様書_A検制御盤.pdf',t:'f',sz:'2.4 MB'},
+   {n:'見積依頼_20260210.xlsx',t:'f',sz:'88 KB'}]},
+ {n:'02_設計',t:'d',c:[
+   {n:'図面',t:'d',c:[
+     {n:'盤図_R2.dxf',t:'f',sz:'1.1 MB'},
+     {n:'装置全体図_02.pdf',t:'f',sz:'3.2 MB',reg:1},
+     {n:'センサーブラケット.step',t:'f',sz:'640 KB'}]},
+   {n:'部品表_v3.xlsx',t:'f',sz:'120 KB'},
+   {n:'制御盤_BOM_rev3.pdf',t:'f',sz:'900 KB',reg:1}]},
+ {n:'03_過去案件参考',t:'d',c:[
+   {n:'旧設備仕様書.pdf',t:'f',sz:'4.0 MB',reg:1},
+   {n:'PRJ-2025-0092_見積.xlsx',t:'f',sz:'64 KB'}]}
+];
+let treeOpen={'01_客先支給':1,'02_設計':1,'02_設計/図面':1};
+let pickSel=new Set(), upFiles=[], addFrom='input';
+
+function icoOf(n){const e=(n.split('.').pop()||'').toLowerCase();
+ return e==='dxf'||e==='dwg'?'📐':e==='step'||e==='stp'?'📘':e==='xlsx'||e==='xls'?'📗':e==='pdf'?'📕':'📄'}
+function srcOf(n){const e=(n.split('.').pop()||'').toLowerCase();
+ return e==='dxf'||e==='dwg'?'drawing':e==='step'||e==='stp'?'cad':e==='xlsx'||e==='xls'?'bom':'spec'}
+function srcOpts(s){return ['spec','drawing','cad','bom']
+ .map(k=>`<option value="${k}"${k===s?' selected':''}>${SRC_JA[k]}（${k}）</option>`).join('')}
+function fmtSz(b){return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB'}
+function nodeAt(p){let ns=TREE,node=null;p.split('/').forEach(s=>{node=(ns||[]).find(x=>x.n===s);ns=node?node.c:[]});return node}
+function eachFile(ns,base,fn){(ns||[]).forEach(n=>{const p=base?base+'/'+n.n:n.n;n.t==='d'?eachFile(n.c,p,fn):fn(n,p)})}
+function totalSel(){return pickSel.size+upFiles.length}
+
+function openAdd(from){
+  addFrom=from==='chat'?'chat':'input';
+  pickSel.clear();upFiles=[];
+  $('#treeQ').value='';
+  $$('#addMask .tab').forEach((x,i)=>x.classList.toggle('active',i===0));
+  ['inPick','inUp'].forEach((id,i)=>$('#'+id).style.display=i?'none':'');
+  $('#addWhere').textContent=addFrom==='chat'
+    ? 'A1で登録し、このスレッドの参照資料に追加します。解析（A3）が完了するまではAIの検索対象になりません。'
+    : '登録すると解析（A1→A3）が非同期で開始されます。';
+  syncAdd();$('#addMask').classList.add('open');
+}
+function closeAdd(){$('#addMask').classList.remove('open')}
+function togDir(p){treeOpen[p]=!treeOpen[p];drawTree()}
+function togPick(p,on){
+  if(on){if(totalSel()>=MAXSEL){toast('選択できるのは最大'+MAXSEL+'ファイルです');syncAdd();return}pickSel.add(p)}
+  else pickSel.delete(p);
+  syncAdd();
+}
+function fileRow(n,p,pad){
+  return `<div class="tr-row tr-file" style="padding-left:${pad}px">
+    <label><input type="checkbox" ${pickSel.has(p)?'checked':''} ${n.reg?'disabled':''} onchange="togPick('${p}',this.checked)">
+      <span>${icoOf(n.n)}</span><span class="tr-name">${esc(n.n)}</span></label>
+    <span class="tr-meta">${n.reg?'<span class="tag-reg">AI登録済み</span>':''}<span class="tr-path">${n.sz||''}</span></span></div>`}
+function treeHtml(ns,base,d){return (ns||[]).map(n=>{
+  const p=base?base+'/'+n.n:n.n, pad=7+d*17;
+  if(n.t==='d'){const op=!!treeOpen[p];
+    return `<div class="tr-row tr-dir" style="padding-left:${pad}px" onclick="togDir('${p}')">
+      <span class="tr-car">${op?'▼':'▶'}</span>📁 ${esc(n.n)}</div>`+(op?treeHtml(n.c,p,d+1):'')}
+  return fileRow(n,p,pad)}).join('')}
+function drawTree(){
+  const q=($('#treeQ').value||'').trim().toLowerCase();
+  if(!q){$('#tree').innerHTML=treeHtml(TREE,'',0);$('#treeHint').textContent='';return}
+  let rows='',hit=0;
+  eachFile(TREE,'',(n,p)=>{if(n.n.toLowerCase().includes(q)){hit++;
+    rows+=fileRow(n,p,7)+`<div class="tr-sub">${esc(p.split('/').slice(0,-1).join(' / '))}</div>`}});
+  $('#tree').innerHTML=rows||'<div class="tr-none">該当するファイルがありません</div>';
+  $('#treeHint').textContent=hit?hit+' 件':'';
+}
+function pickUp(files){
+  let over=false;
+  [...files].forEach(f=>{
+    if(totalSel()>=MAXSEL){over=true;return}
+    if(upFiles.some(x=>x.name===f.name))return;
+    upFiles.push({name:f.name,sz:fmtSz(f.size),src:srcOf(f.name)});
+  });
+  if(over)toast('選択できるのは最大'+MAXSEL+'ファイルです');
+  $('#fileIn').value='';syncAdd();
+}
+function rmUp(i){upFiles.splice(i,1);syncAdd()}
+function setUpSrc(i,v){upFiles[i].src=v}
+function drawUp(){
+  $('#upList').innerHTML=upFiles.map((f,i)=>`<div class="fl"><span>${icoOf(f.name)}</span>
+    <span class="tr-name">${esc(f.name)}</span><span class="tr-path">${f.sz}</span>
+    <select onchange="setUpSrc(${i},this.value)">${srcOpts(f.src)}</select>
+    <button class="x" onclick="rmUp(${i})" aria-label="削除">×</button></div>`).join('');
+}
+function syncAdd(){
+  drawTree();drawUp();
+  const n=totalSel();
+  $('#addCnt').textContent=n?`${n} 件を選択中（最大 ${MAXSEL} 件）`:'ファイルが選択されていません';
+  $('#addBtn').disabled=n===0;
+}
+function addDoc(){
+  const list=[];
+  pickSel.forEach(p=>{const n=nodeAt(p);if(n)list.push({name:n.n,src:srcOf(n.n)})});
+  upFiles.forEach(f=>list.push({name:f.name,src:f.src}));
+  if(!list.length){toast('ファイルを選択してください');return}
+  const from=addFrom;
+  if(upFiles.length){                       /* アップロード分は共有フォルダにも保存 */
+    let up=TREE.find(x=>x.n==='04_アップロード');
+    if(!up){up={n:'04_アップロード',t:'d',c:[]};TREE.push(up)}
+    treeOpen['04_アップロード']=1;
+    upFiles.forEach(f=>{if(!up.c.some(x=>x.n===f.name))up.c.push({n:f.name,t:'f',sz:f.sz,reg:1})});
+  }
+  pickSel.forEach(p=>{const n=nodeAt(p);if(n)n.reg=1});
+  closeAdd();
+  const base=docs.length;
+  const added=list.map((f,k)=>({id:'doc_'+String(base+k+1).padStart(3,'0'),name:f.name,ic:icoOf(f.name),
+    src:f.src,srcJa:SRC_JA[f.src]||f.src,status:'queued',at:'16:40',items:[],q:[],scope:'project'}));
+  docs.unshift(...added);
+  /* 参照資料は documentId で保持するため、登録・削除でインデックスがずれることはない。
+     チャットからの添付は参照に加えるが、status=queued の間はA4へ送らない（解析完了後に対象化）。 */
+  if(from==='chat')attachDocs(added.map(d=>d.id));
+  pickSel.clear();upFiles=[];
+  cur=0;focusIt=null;editIdx=null;delAsk=null;
+  drawDocs();drawEx();drawThreads();drawChat();
+  toast(from==='chat'
+    ? `A1 で ${added.length} 件を登録し、参照資料に追加しました（解析完了後に検索対象になります）`
+    : `A1 で ${added.length} 件を登録しました（202 Accepted ／ status: queued）`);
+  setTimeout(()=>{added.forEach(d=>d.status='processing');drawDocs();drawEx();toast('A3 ポーリング：processing')},1500);
+  setTimeout(()=>{added.forEach(d=>{d.status='completed';
+    d.items=[{cat:'material',txt:'安全扉センサー材質：SUS304（確定）',st:'candidate',c:.95,page:1,sec:'本文',state:'open'}]});
+    drawDocs();drawEx();drawChat();toast('A3 ポーリング：completed（候補 '+added.length+' 件）')},3800);
+}
+
+/* ===================== 2. chat (multi-thread) =====================
+   前提（A4 / POST /v1/projects/{projectId}/chat）
+   - A4 はファイルを受け取らない。参照できるのは A1 で登録し A3 で解析完了した資料のみ。
+   - documentIds は「任意」。未指定なら案件の全登録資料が検索対象、指定すると その資料に限定（絞り込み）。
+   - スレッド・履歴は AI 側に残らない。プラットフォーム側が保持し、直近10件だけを history で渡す。
+   → したがって「新しいスレッド」は空で始まる。事前の挨拶も、事前に紐づいた資料も存在しない。 */
+
+const hhmm=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const EX_Q=['安全扉センサーの型番と数量を教えてください','PLCの型番は？','安全扉センサーの材質はSUS304で確定です'];
+
+/* docIds: null = 絞り込みなし（全登録資料が対象／documentIds を送らない）
+           配列 = その資料に絞り込み（documentIds を送る）           */
+let threads=[
+ {id:'th_001',title:'安全扉センサーの材質確認',at:'16:24',docIds:['doc_001'],auto:false,msgs:[
+   {w:'u',h:'BOMの安全扉センサー、材質はSUS304で確定でよいですか？'},
+   {w:'a',h:`<span class="bdg plain">intent: question</span><br style="line-height:2">BOM rev.3 には <b>SUS304</b> の記載がありますが、<b>確定前の候補</b>のため確定値としては扱っていません。`},
+   {w:'u',h:'BOMの記載どおりSUS304で確定です。'},
+   {w:'a',h:`<span class="bdg plain">intent: memoryUpdate</span><br style="line-height:2">承知しました。修正候補として登録します。
+     <div class="memcard"><div class="memcard-t">修正候補 ・ memoryUpdates（status: pending）</div>
+       <div style="font-size:12px;line-height:1.6"><span class="cat">material</span> 安全扉センサー材質 ＝ SUS304 ${conf(.95)}</div></div>`}
+ ]},
+ {id:'th_002',title:'PLC・I/O構成の確認',at:'15:51',docIds:null,auto:false,msgs:[
+   {w:'u',h:'制御盤のPLC構成を教えてください。'},
+   {w:'a',h:`<span class="bdg plain">intent: question</span><br style="line-height:2">PLC CPUは <b>KEYENCE KV-8000</b> が1台、I/Oユニット <b>KV-NC32T</b> が2台です。`}
+ ]},
+ {id:'th_003',title:'新しいスレッド',at:'16:40',docIds:null,auto:true,msgs:[]}
+];
+let curTh=2, thSeq=3, sending=false;
+
+const docById=id=>docs.find(d=>d.id===id);
+const readyDocs=()=>docs.filter(d=>d.status==='completed');
+/* 絞り込み対象のうち、実在かつ解析完了のものだけが実際に送られる */
+const thAll =t=>(t.docIds||[]).map(docById).filter(Boolean);              /* 添付されている資料（解析中も含む） */
+const thRefs=t=>thAll(t).filter(d=>d.status==='completed');              /* 実際に documentIds として送れるもの */
+
+function drawThreads(){
+  $('#thList').innerHTML=threads.map((t,i)=>{
+    const last=t.msgs[t.msgs.length-1];
+    const snip=!last ? 'まだメッセージはありません'
+      : last.w==='e' ? `⚠ ${last.code}（未送信）`
+      : last.h.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,42);
+    const nRef=t.docIds===null?'全件':thAll(t).length;
+    return `<div class="th ${i===curTh?'on':''}" onclick="selTh(${i})" tabindex="0">
+      <button class="th-e" title="スレッド名を変更" onclick="event.stopPropagation();startRen(${i})">✎</button>
+      <button class="th-x" title="スレッドを削除" onclick="event.stopPropagation();delTh(${i})">×</button>
+      ${i===renTh
+        ? `<input class="th-in" id="thRen" maxlength="100" onclick="event.stopPropagation()" onkeydown="renKey(event,${i})" onblur="renSave(${i},this.value)">`
+        : `<div class="th-t" ondblclick="event.stopPropagation();startRen(${i})" title="ダブルクリックで名前を変更">${esc(t.title)}</div>`}
+      <div class="th-s ${last?'':'none'}">${esc(snip)}</div>
+      <div class="th-m"><span>💬 ${t.msgs.length}</span><span title="参照資料の絞り込み">🔍 ${nRef}</span><span style="margin-left:auto">${t.at}</span></div>
+    </div>`}).join('');
+  if(renTh!==null){const el=$('#thRen');if(el){el.value=threads[renTh].title;el.focus();el.select()}}
+}
+
+const chipsHtml=qs=>`<div class="chips">${qs.map(q=>`<button class="chip" onclick="qk(this)">${esc(q)}</button>`).join('')}</div>`;
+
+function drawChat(){
+  const t=threads[curTh], n=t.msgs.length;
+  const nHist=t.msgs.filter(m=>m.w!=='e').length;   /* エラー表示はA4に渡す履歴には含めない */
+  $('#thTitle').textContent=t.title;
+
+  let h;
+  if(!n){
+    /* 空のスレッド：AIはまだ何も発話していない。以下はUI側の案内であって応答ではない。 */
+    h=`<div class="chat-empty">
+        <div class="chat-empty-ic">💬</div>
+        <div class="chat-empty-t">${CUR_PRJ.id} ／ ${esc(CUR_PRJ.name)} について質問できます</div>
+        <div class="chat-empty-s">解析完了した登録資料 <b>${readyDocs().length}件</b> と確定済み案件情報をもとに回答します。<br>
+          最初のメッセージを送ると、この案件のスレッドとしてプラットフォーム側に保存されます。</div>
+        ${readyDocs().length
+          ? `<div class="chat-empty-ex">入力例</div>${chipsHtml(EX_Q)}`
+          : `<div class="note" style="margin-top:14px;text-align:left">解析が完了した資料がまだありません。確定済み案件情報のみを対象に回答します。
+              <div class="chips"><button class="chip" onclick="goPage('p1')">資料インプットを開く</button></div></div>`}
+      </div>`;
+  }else{
+    h=t.msgs.map((m,i)=>{
+      if(m.w==='e')return `<div class="msg a"><div class="ava err">!</div><div class="bub err">
+        <b>回答を取得できませんでした</b>
+        <div class="err-code">${m.st} ${m.code}</div>
+        <div>${esc(m.detail)}</div>
+        <div class="err-act"><button class="btn btn-outline btn-sm" onclick="retryLast()">🔄 同じ内容で再送</button>
+          <span class="muted">メッセージは送信されていません</span></div></div></div>`;
+      /* 候補の質問チップは最新のAI発話にだけ出す（古い発話のチップを押せると意図しない再送になる） */
+      const body=(i===n-1)?m.h:m.h.replace(/<div class="chips">[\s\S]*?<\/div>\s*$/,'');
+      return `<div class="msg ${m.w}"><div class="ava ${m.w==='u'?'u':'ai'}">${m.w==='u'?'山田':'AI'}</div><div class="bub">${body}</div></div>`;
+    }).join('');
+    if(sending)h+=`<div class="msg a"><div class="ava ai">AI</div><div class="bub typing"><span class="spin"></span>回答を作成しています…</div></div>`;
+  }
+  $('#chatLog').innerHTML=h;
+  $('#chatLog').scrollTop=$('#chatLog').scrollHeight;
+
+  const hist=Math.min(nHist,10);
+  $('#histWarn').innerHTML=nHist>10
+    ? `⚠ 履歴が10件を超えています。直近10件のみA4へ送信します（${nHist}件中）`
+    : `<span class="muted">スレッドID ${t.id}　・　history ${hist} / 10 件</span>`;
+  const btn=$('#sendBtn'); if(btn){btn.disabled=sending;btn.textContent=sending?'送信中…':'送信'}
+  drawRefBar();
+}
+
+/* ---- 参照資料＝documentIds の絞り込み。既定は「絞り込みなし＝全件」 ---- */
+const ADD_BTNS=`<button class="btn btn-outline btn-sm" onclick="openAdd('chat')">📎 資料を添付</button>
+    <button class="btn btn-outline btn-sm" onclick="openRefPick()">登録済みから選ぶ</button>`;
+
+function refChip(d){
+  const wait=d.status==='queued'||d.status==='processing', bad=d.status==='failed';
+  const head=wait?'<span class="spin"></span>':bad?'⚠':d.ic;
+  const tip=wait?`${STATUS_JA[d.status]}：解析完了までA4の検索対象になりません`:bad?'解析失敗：検索対象になりません':'解析完了';
+  return `<span class="ref-chip${wait?' wait':bad?' bad':''}" title="${tip}">${head}<span>${esc(d.name)}</span><button onclick="detachRef('${d.id}')" title="参照から外す">×</button></span>`;
+}
+function drawRefBar(){
+  const t=threads[curTh];
+  if(t.docIds===null){
+    $('#refBar').innerHTML=`<span class="ref-lb">🔍 全ての登録資料から回答します<span class="muted">（既定 ／ documentIds なし）</span></span>${ADD_BTNS}`;
+    $('#chatScope').innerHTML=`参照資料 <b>全件</b>（${readyDocs().length} 件が解析完了）`;
+    return;
+  }
+  const all=thAll(t), ready=thRefs(t), wait=all.filter(d=>d.status==='queued'||d.status==='processing').length;
+  $('#refBar').innerHTML=`<span class="ref-lb">🔍 この資料だけを参照中</span>${all.map(refChip).join('')||'<span class="muted">対象なし</span>'}
+    ${ADD_BTNS}<button class="btn btn-outline btn-sm" onclick="clearRef()">全件に戻す</button>`;
+  $('#chatScope').innerHTML=ready.length
+    ? `参照資料 <b>${ready.length}</b> / 20 件（documentIds を指定）${wait?`　・　<span style="color:var(--warn-d)">解析中 ${wait} 件は今回送信されません</span>`:''}`
+    : wait
+      ? `<span style="color:var(--warn-d)">⏳ 添付した資料を解析中です（A3 完了後に参照できます）</span>`
+      : `<span style="color:var(--warn)">⚠ 参照できる資料が0件です。全件に戻してください</span>`;
+}
+function clearRef(){threads[curTh].docIds=null;drawRefBar();drawThreads();toast('参照の指定を解除しました（全登録資料が対象）')}
+/* チャットから添付＝A1登録して、このスレッドの参照資料に加える */
+function attachDocs(ids){
+  const t=threads[curTh];
+  t.docIds=[...new Set([...(t.docIds||[]),...ids])].slice(0,20);
+  drawThreads();drawChat();
+}
+function detachRef(id){const t=threads[curTh];t.docIds=(t.docIds||[]).filter(x=>x!==id);
+  if(!t.docIds.length)t.docIds=null;
+  drawRefBar();drawThreads()}
+
+let rpPick=[];
+function openRefPick(){
+  const t=threads[curTh], sel=new Set(t.docIds||[]);
+  const rows=docs.map(d=>{
+    const ok=d.status==='completed';
+    return `<label class="rp${ok?'':' off'}">
+      <input type="checkbox" class="rp-cb" value="${d.id}" ${sel.has(d.id)?'checked':''} ${ok?'':'disabled'}>
+      <span>${d.ic}</span><span class="rp-n">${esc(d.name)}</span>
+      <span class="rp-m">${d.srcJa}</span>
+      ${ok?'<span class="bdg completed"><span class="dot"></span>解析完了</span>':bdg(d.status,STATUS_JA[d.status])}
+    </label>`}).join('');
+  openDlg({
+    title:'登録済みの資料から選ぶ',
+    sub:'A4 <code>documentIds</code>（任意・最大20件）。<b>何も選ばなければ全ての登録資料</b>が検索対象になります。',
+    body:`<div class="rp-list">${rows}</div>`,
+    note:'A4はファイルを直接受け取りません。ここで選べるのは解析が完了（A3 status=completed）した資料だけです。未登録のファイルは「📎 資料を添付」から登録してください。',
+    okText:'この条件を適用',
+    validate(){
+      rpPick=[...document.querySelectorAll('#dlgBody .rp-cb:checked')].map(x=>x.value);
+      if(rpPick.length>20){toast('参照資料は最大20件です');return false}
+    },
+    onOk(){
+      threads[curTh].docIds=rpPick.length?rpPick:null;
+      drawRefBar();drawThreads();
+      toast(rpPick.length?`${rpPick.length}件に絞り込みました`:'絞り込みなし（全登録資料が対象）');
+    }
+  });
+}
+
+let renTh=null, renEsc=false;
+function startRen(i){renTh=i;curTh=i;renEsc=false;drawThreads();drawChat()}
+function renKey(e,i){
+  if(e.key==='Enter'){e.preventDefault();e.target.blur()}
+  else if(e.key==='Escape'){e.preventDefault();renEsc=true;e.target.blur()}
+}
+function renSave(i,v){
+  if(renTh!==i)return;
+  renTh=null;
+  if(renEsc){renEsc=false;drawThreads();return}
+  const nv=v.trim();
+  if(!nv){drawThreads();toast('スレッド名を入力してください');return}
+  if(nv===threads[i].title){drawThreads();return}
+  threads[i].title=nv;threads[i].auto=false;   /* 手動で付けた名前は自動命名で上書きしない */
+  drawThreads();drawChat();
+  toast('スレッド名を変更しました（プラットフォーム側で保持）');
+}
+function selTh(i){if(renTh!==null||sending)return;curTh=i;drawThreads();drawChat()}
+
+function newTh(){
+  if(sending){toast('回答の生成中です');return}
+  const e=threads.findIndex(t=>!t.msgs.length);
+  if(e>-1){                                   /* 空のスレッドを量産しない */
+    curTh=e;drawThreads();drawChat();$('#chatIn').focus();
+    toast('未使用のスレッドへ切り替えました');return;
+  }
+  thSeq++;
+  threads.unshift({id:'th_'+String(thSeq).padStart(3,'0'),title:'新しいスレッド',at:hhmm(),docIds:null,auto:true,msgs:[]});
+  curTh=0;drawThreads();drawChat();$('#chatIn').focus();
+  toast('スレッドを作成しました（プラットフォーム側で保持）');
+}
+function delTh(i){
+  if(threads.length===1&&!threads[0].msgs.length){toast('このスレッドは空です');return}
+  const go=()=>{
+    threads.splice(i,1);
+    if(!threads.length){thSeq++;threads.push({id:'th_'+String(thSeq).padStart(3,'0'),title:'新しいスレッド',at:hhmm(),docIds:null,auto:true,msgs:[]})}
+    if(curTh>=threads.length)curTh=threads.length-1; else if(i<curTh)curTh--;
+    renTh=null;drawThreads();drawChat();toast('スレッドを削除しました');
+  };
+  if(!threads[i].msgs.length){go();return}   /* 空なら確認不要 */
+  openDlg({
+    title:'このスレッドを削除しますか？',
+    sub:esc(threads[i].title),
+    body:`<div class="muted" style="font-size:12px;line-height:1.7">会話 ${threads[i].msgs.length} 件が削除されます。チャット履歴はプラットフォーム側の正本のため、<b>元に戻せません</b>。<br>
+      すでに正本へ反映した案件情報は削除されません。</div>`,
+    okText:'削除する',okClass:'btn-danger',onOk:go
+  });
+}
+
+/* ---- 応答パターン（モック）：入力内容から intent を振り分ける ----
+   intent は ProjectChatIntent の5値: question / memoryUpdate / documentRequest / drawingRequest / other */
+const CHIPS=`<div class="chips"><button class="chip" onclick="qk(this)">非常停止ボタンの数量は？</button>
+  <button class="chip" onclick="qk(this)">PLCの型番を教えてください</button></div>`;
+
+const R_MEMUPDATE=()=>`承知しました。<b>安全扉センサーの材質＝SUS304</b>を修正候補として登録します。BOM rev.3 の1ページ目・BOM行2の記載とも一致しています。
+  <div class="srcs"><div class="srcs-t">SOURCES</div>
+    <div class="src"><div class="src-h"><b>制御盤_BOM_rev3.pdf</b>${conf(.96)}</div>
+      <div style="color:var(--ink-2);line-height:1.55">「安全扉センサー GC-2000 ／ SUS304」（1ページ・BOM行 2）</div></div></div>
+  <div class="memcard"><div class="memcard-t">修正候補 ・ memoryUpdates（status: pending）</div>
+    <div class="diff"><div class="side"><span class="lb">現在の値</span><i>未登録</i></div>
+      <div class="ar">→</div><div class="side to"><span class="lb">更新後</span>安全扉センサー材質：SUS304</div></div>
+    <div style="margin-top:7px">${conf(.95)}</div>
+    <div class="note" style="margin-top:8px">AI側では確定しません。<b>プロジェクトメモリ</b>で内容を確認して確定すると、<code>PUT /memory/confirmed</code> で正本へ同期されます。</div>
+    <div style="margin-top:8px;display:flex;gap:7px;flex-wrap:wrap">
+      <button class="btn btn-primary btn-sm" onclick="toMemory(this)">プロジェクトメモリへ登録</button>
+      <button class="btn btn-outline btn-sm" onclick="dropCand(this)">破棄</button></div></div>${CHIPS}`;
+
+const R_PLC=()=>`PLC CPUは <b>KEYENCE KV-8000</b> が1台、I/Oユニットは <b>KV-NC32T</b> が2台です。
+  <div class="srcs"><div class="srcs-t">SOURCES</div>
+    <div class="src"><div class="src-h"><b>制御盤_BOM_rev3.pdf</b>${conf(.93)}</div>
+      <div style="color:var(--ink-2);line-height:1.55">「KV-8000 ×1 ／ KV-NC32T ×2」（2ページ・BOM行 5-7）</div></div></div>${CHIPS}`;
+
+const R_SENSOR=()=>`安全扉センサーは <b>GC-2000</b> が <b>2台</b>です。材質は SUS304 ですが、こちらは<b>確定前の候補</b>のため確定値としては扱っていません。
+  <div class="srcs"><div class="srcs-t">SOURCES</div>
+    <div class="src"><div class="src-h"><b>制御盤_BOM_rev3.pdf</b>${conf(.91)}</div>
+      <div style="color:var(--ink-2);line-height:1.55">「安全扉センサー GC-2000 ×2 ／ SUS304」（1ページ・BOM行 2）</div></div></div>${CHIPS}`;
+
+const R_DOCREQ=()=>`資料生成のご依頼として判定しました。生成は <b>A6</b>（生成ジョブ作成）→ <b>A7</b>（結果取得）の非同期処理で実行します。
+  <div class="note">このチャットは intent の判定までを担当します。実際の生成は「資料アウトプット」画面から実行してください。</div>
+  <div class="chips"><button class="chip" onclick="goPage('p3')">資料アウトプットを開く</button></div>`;
+
+const R_DRAWREQ=()=>`電気図面に関するご依頼と判定しました。図面生成は<b>機能B（電気図面自動生成）</b>の担当範囲です。
+  <div class="note">機能Aのチャットでは intent の判定のみを返します。後続の振り分けはプラットフォーム側の責務です。</div>`;
+
+const R_NOSRC=q=>`登録資料と確定済み案件情報の中に、<b>${q}</b> の根拠となる記載が見つかりませんでした。確定前の情報は断定しないため、推測での回答はいたしません。
+  <div class="memcard"><div class="memcard-t">followUpQuestions</div>
+    <div style="font-size:12px;line-height:1.7">・対象の装置名・図番を教えてください<br>・該当する資料を添付いただけますか</div></div>${CHIPS}`;
+
+const R_SCOPE=()=>`現在このスレッドは<b>参照資料を絞り込み中</b>のため、指定された資料の解析結果だけを検索しました。該当する記載はありません。
+  <div class="note">絞り込みを解除すると、案件の全登録資料を対象に検索します。</div>
+  <div class="chips"><button class="chip" onclick="clearRef()">全件に戻して質問し直す</button></div>`;
+
+const R_OTHER=()=>`案件に関するご質問、または資料内容の修正指示をお送りください。登録済みの資料と確定済み案件情報をもとに回答します。${CHIPS}`;
+
+function botReply(q){
+  const s=q.toLowerCase(), has=(...w)=>w.some(x=>s.includes(x));
+  const t=threads[curTh], narrowed=t.docIds!==null;
+  if(has('sus','材質','確定です','で確定','修正','訂正','に変更'))   return {intent:'memoryUpdate',    h:R_MEMUPDATE()};
+  if(has('plc','kv-','cpu','i/o','ユニット'))
+    return narrowed&&!thRefs(t).some(d=>d.id==='doc_001')
+      ? {intent:'question', h:R_SCOPE()} : {intent:'question', h:R_PLC()};
+  if(has('センサー','型番','数量','何台','gc-'))                      return {intent:'question',        h:R_SENSOR()};
+  if(has('見積','スケジュール','提案書','資料を作','資料作成','生成して')) return {intent:'documentRequest',  h:R_DOCREQ()};
+  if(has('図面','回路図','盤レイアウト','結線','電気図'))              return {intent:'drawingRequest',  h:R_DRAWREQ()};
+  if(/[?？]$/.test(q.trim())||has('教えて','ですか','どこ','いくつ','どの','なぜ','何'))
+                                                                      return {intent:'question',        h:R_NOSRC(esc(q.slice(0,40)))};
+  return {intent:'other', h:R_OTHER()};
+}
+
+/* ---- 送信：A4は同期1往復。応答が返るまで多重送信させない ---- */
+function send(){
+  if(sending)return;
+  const el=$('#chatIn'), v=el.value.trim();
+  if(!v)return;
+  if(v.length>4000){toast('4,000文字以内で入力してください');return}
+  const t=threads[curTh];
+  if(t.docIds!==null&&!thRefs(t).length){
+    toast(thAll(t).length?'添付した資料を解析中です。完了までお待ちいただくか、全件に戻してください'
+                         :'参照できる資料が0件です。全件に戻すか資料を選び直してください');
+    return}
+  t.msgs.push({w:'u',h:esc(v)});
+  t.at=hhmm();
+  if(t.auto){t.title=v.slice(0,22)+(v.length>22?'…':'');t.auto=false}
+  el.value='';cnt(el,'chatCnt',4000);
+  ask(v);
+}
+/* ユーザー発話を積まずにA4だけ呼ぶ（再送で使う） */
+function ask(v){
+  const t=threads[curTh];
+  sending=true;drawThreads();drawChat();
+  setTimeout(()=>{
+    sending=false;
+    if($('#errMock')&&$('#errMock').checked){
+      t.msgs.push({w:'e',q:v,st:'503',code:'LLM_CONCURRENCY_LIMITED',
+        detail:'LLMの同時実行枠を待機時間内に取得できませんでした。時間をおいて再送してください。'});
+    }else{
+      const r=botReply(v);
+      t.msgs.push({w:'a',h:`<span class="bdg plain">intent: ${r.intent}</span><br style="line-height:2">${r.h}`});
+    }
+    t.at=hhmm();
+    drawThreads();drawChat();
+  },620);
+}
+function retryLast(){
+  if(sending)return;
+  const t=threads[curTh], last=t.msgs[t.msgs.length-1];
+  if(!last||last.w!=='e')return;
+  const v=last.q;
+  t.msgs.pop();
+  ask(v);
+}
+function qk(el){
+  if(sending)return;
+  $('#chatIn').value=el.textContent;cnt($('#chatIn'),'chatCnt',4000);send();
+}
+
+/* 修正候補 → プロジェクトメモリ（正本の確定はそちらの画面で行う） */
+function toMemory(btn){
+  MEM.unshift({id:'mem_'+String(MEM.length+1).padStart(3,'0'),cat:'material',k:'安全扉センサー材質',v:'SUS304',
+    st:'pending',c:.95,scope:'project',doc:'制御盤_BOM_rev3.pdf',page:1,sec:'BOM行 2',at:'今日 '+hhmm()});
+  drawMem();
+  btn.parentElement.innerHTML=`<span class="bdg pending"><span class="dot"></span>プロジェクトメモリに登録済み</span>
+    <button class="btn btn-outline btn-sm" onclick="goPage('p4')">プロジェクトメモリで確定する</button>`;
+  toast('修正候補をプロジェクトメモリに登録しました（未確定）');
+}
+function dropCand(btn){btn.parentElement.innerHTML='<span class="muted">この修正候補は破棄しました</span>';toast('修正候補を破棄しました')}
+
+/* ===================== 3. output ===================== */
+const DT=c=>DOC_TYPES.find(x=>x.c===c);
+const nowT=()=>{const d=new Date();return '今日 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+
+let selType=null;
+function drawTypes(){
+  $('#docTypeSel').innerHTML=`<option value="">選択してください（全7種）</option>`+
+    DOC_TYPES.map(d=>`<option value="${d.c}" ${selType===d.c?'selected':''}>${d.ic}　${d.t}　— ${d.d}</option>`).join('');
+  $('#genHint').textContent=selType?`${DT(selType).t} を生成します`:'資料種別を選択してください';
+}
+function pickType(c){selType=c||null;drawTypes()}
+
+function drawOut(){
+  $('#outList').innerHTML=outDocs.map((o,i)=>{
+    const d=DT(o.c), cur=o.vers[0], older=o.vers.slice(1);
+    if(cur.st!=='completed')return `<div class="orow">
+      <span class="ocard-ic">${d.ic}</span>
+      <div class="orow-main"><div class="ocard-t">${d.t}</div>
+        <div class="ocard-s">第${cur.v}版を作成中…</div>
+        <div class="prog"><i style="width:${cur.st==='queued'?12:64}%"></i></div></div>
+      <div class="orow-act"><span class="spin"></span></div></div>`;
+    return `<div class="orow">
+      <span class="ocard-ic">${d.ic}</span>
+      <div class="orow-main"><div class="ocard-t">${d.t}</div>
+        <div class="ocard-s">第${cur.v}版 ・ md ・ ${cur.at}</div></div>
+      <div class="orow-act">
+        ${older.length?`<button class="ocard-ver" onclick="tgVer(${i})">${o.open?'▴':'▾'} 過去の版 ${older.length}</button>`:''}
+        <button class="lnk" onclick="newVer(${i})">↻ 新しい版を作成</button>
+        <button class="btn btn-outline btn-sm" onclick="showMd(${i},0)">表示</button>
+        <button class="ibtn" title="ダウンロード" onclick="toast('ダウンロードを開始しました')">↓</button>
+        <button class="ibtn del" title="削除" onclick="delVer(${i},0)">🗑</button></div></div>
+      ${o.open&&older.length?`<div class="overs">${older.map((x,k)=>`
+        <div class="over"><span>第${x.v}版 ・ md ・ ${x.at}</span>
+          <button class="btn btn-outline btn-xs" onclick="showMd(${i},${k+1})">表示</button>
+          <button class="ibtn" title="ダウンロード" onclick="toast('ダウンロードを開始しました')">↓</button>
+          <button class="ibtn del" title="削除" onclick="delVer(${i},${k+1})">🗑</button></div>`).join('')}</div>`:''}`
+  }).join('')
+    ||`<div class="out-empty">まだ資料がありません。上の「生成を開始」から作成してください。</div>`;
+}
+function tgVer(i){outDocs[i].open=!outDocs[i].open;drawOut()}
+
+function runGen(o){
+  const cur=o.vers[0];
+  setTimeout(()=>{cur.st='processing';drawOut()},900);
+  setTimeout(()=>{cur.st='completed';cur.at=nowT();drawOut();toast(`${DT(o.c).t} 第${cur.v}版ができました`)},3600);
+}
+function gen(){
+  if(!selType){toast('資料種別を選択してください');return}
+  mkDoc(selType);
+}
+function mkDoc(c){
+  let o=outDocs.find(x=>x.c===c);
+  if(o){o.vers.unshift({v:o.vers[0].v+1,at:'',st:'queued'});outDocs.splice(outDocs.indexOf(o),1);outDocs.unshift(o)}
+  else{o={c,open:false,vers:[{v:1,at:'',st:'queued'}]};outDocs.unshift(o)}
+  drawOut();toast(`${DT(c).t} の生成を開始しました`);runGen(o);
+}
+function newVer(i){mkDoc(outDocs[i].c)}
+function delVer(i,k){
+  const o=outDocs[i],d=DT(o.c),x=o.vers[k],last=o.vers.length===1;
+  openDlg({
+    title:'この資料を削除しますか？',
+    sub:last?'この資料の<b>唯一の版</b>です。削除すると資料ごと一覧から消えます。':'選択した版のみを削除します。他の版は残ります。',
+    body:`<dl class="dlg-dl">
+      <dt>資料</dt><dd><b>${d.t}</b></dd>
+      <dt>削除する版</dt><dd>第${x.v}版 ・ md ・ ${x.at}</dd>
+      ${last?'':`<dt>残る版</dt><dd>${o.vers.length-1} 版</dd>`}</dl>`,
+    note:'削除後は元に戻せません。',okText:'削除する',okClass:'btn-danger',
+    onOk:()=>{o.vers.splice(k,1);if(!o.vers.length)outDocs.splice(i,1);
+      drawOut();toast(last?`${d.t} を削除しました`:`第${x.v}版を削除しました`)}
+  });
+}
+
+/* 表示：本文は画面に常時出さず、モーダルで開く */
+function showMd(i,k){
+  const o=outDocs[i],d=DT(o.c),x=o.vers[k];
+  $('#mdmTitle').textContent=d.t;
+  $('#mdmSub').textContent=`第${x.v}版 ・ md ・ ${x.at}`;
+  MD_CUR=o.c==='customerProposal'?MD_SAMPLE
+    :`# ${d.t}\n\n本モックでは ${o.c} のサンプル本文を用意していません。\n実際にはここに、生成結果の Markdown 本文が入ります。\n`;
+  renderMd();$('#mdMask').classList.add('open');
+}
+function closeMd(){$('#mdMask').classList.remove('open')}
+let MD_CUR='';
+function renderMd(){
+  const lines=esc(MD_CUR).split('\n');let out=[],tbl=[];
+  const flush=()=>{if(tbl.length){out.push(mkTable(tbl));tbl=[]}};
+  lines.forEach(l=>{
+    if(/^\|/.test(l)){tbl.push(l);return} flush();
+    if(/^## /.test(l))out.push('<h2>'+l.slice(3)+'</h2>');
+    else if(/^# /.test(l))out.push('<h1>'+l.slice(2)+'</h1>');
+    else if(/^[-*] /.test(l))out.push('<li>'+l.slice(2)+'</li>');
+    else if(l.trim()==='')out.push('');
+    else out.push('<p>'+l+'</p>');
+  });flush();
+  $('#mdOut').innerHTML=out.join('\n').replace(/(<li>[\s\S]*?<\/li>\n?)+/g,m=>'<ul>'+m+'</ul>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+}
+function mkTable(rows){
+  const cells=r=>r.split('|').slice(1,-1).map(c=>c.trim());
+  const head=cells(rows[0]),body=rows.slice(2).map(cells);
+  return '<div class="tbl-wrap"><table><thead><tr>'+head.map(c=>'<th>'+c+'</th>').join('')+'</tr></thead><tbody>'
+    +body.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+}
+
+/* ===================== 4. memory ===================== */
+function memFiltered(){
+  const q=($('#memQ')?.value||'').trim().toLowerCase(),
+        st=$('#memSt')?.value||'', sc=$('#memScope')?.value||'';
+  return MEM.filter(r=>{
+    if(st&&r.st!==st)return false;
+    if(sc&&r.scope!==sc)return false;
+    if(!q)return true;
+    return [r.cat,CAT_JA[r.cat]||'',r.k,r.v,r.doc,r.sec].join(' ').toLowerCase().includes(q);
+  });
+}
+function memConf(r){
+  if(r.st==='confirmed'||r.st==='applied')return '<span class="c-conf" style="color:var(--ink-3)">—</span>';
+  const col=r.c>=.85?'var(--ok-d)':r.c>=CONF_TH?'var(--brand)':'var(--warn-d)';
+  return `<span class="c-conf" style="color:${col}">${Math.round(r.c*100)}%</span>`;
+}
+function memActs(r){
+  if(['candidate','pending','requiresReview'].includes(r.st))
+    return `<button class="btn btn-ok btn-xs" onclick="memConfirm('${r.id}')">確認・確定</button>
+            <button class="btn btn-outline btn-xs" onclick="memReject('${r.id}')">却下</button>`;
+  return `<button class="btn btn-danger btn-xs" onclick="memDelete('${r.id}')">削除</button>`;
+}
+/* ---- 確定前に内容を修正するフォーム ---- */
+function memForm(r){return `<div class="dlg-form">
+  <dl class="dlg-dl">
+    <dt>カテゴリ</dt><dd>${CAT_JA[r.cat]||r.cat} <span class="muted">${r.cat}</span></dd>
+    <dt>項目</dt><dd><b>${esc(r.k)}</b></dd>
+    <dt>管理区分</dt><dd>${r.scope}</dd>
+  </dl>
+  <div class="field" style="margin-top:13px"><label class="label">内容 <span class="req">必須</span></label>
+    <textarea id="edV">${esc(r.v)}</textarea></div>
+  <div class="ai-ref">
+    <div><span class="lb">AI抽出値</span><b>${esc(r.orig||r.v)}</b>　${r.c?'確度 '+Math.round(r.c*100)+'%':''}</div>
+    <div><span class="lb">根拠</span>${esc(r.doc)}　${r.page}ページ・${esc(r.sec)}</div>
+  </div>
+  <div class="dlg-err" id="edErr"></div></div>`}
+function memFormOk(){const v=$('#edV').value.trim(),e=$('#edErr');
+  if(!v){e.textContent='内容は必須です。';e.style.display='block';return false}
+  e.style.display='none';return true}
+function memFormSave(r){const v=$('#edV').value.trim();
+  if(v===r.v)return false;
+  if(!r.orig)r.orig=r.v;
+  r.v=v;r.edited=true;return true}
+function memBox(r){return `<dl class="dlg-dl">
+  <dt>カテゴリ</dt><dd>${CAT_JA[r.cat]||r.cat} <span class="muted">${r.cat}</span></dd>
+  <dt>項目</dt><dd><b>${esc(r.k)}：${esc(r.v)}</b></dd>
+  <dt>現在の状態</dt><dd>${bdg(r.st,ITEM_JA[r.st])}</dd>
+  <dt>根拠</dt><dd>${esc(r.doc)}　${r.page}ページ・${esc(r.sec)}</dd>
+  <dt>管理区分</dt><dd>${r.scope}</dd></dl>`}
+function nowStamp(){const d=new Date(),z=n=>String(n).padStart(2,'0');
+  return `${d.getMonth()+1}/${d.getDate()} ${z(d.getHours())}:${z(d.getMinutes())}`}
+function memTouch(r){const i=MEM.indexOf(r);if(i>0){MEM.splice(i,1);MEM.unshift(r)}r.at=nowStamp()}
+function memConfirm(id){const r=MEM.find(x=>x.id===id);if(!r)return;
+  openDlg({title:'内容を確認して確定',
+    sub:'AIの抽出内容を必要に応じて<b>修正してから</b>確定できます。確定後は内容が正本として保持されるため、ここで内容をご確認ください。',
+    body:memForm(r),okText:'確定する',validate:memFormOk,
+    onOk:()=>{const ch=memFormSave(r);r.st='confirmed';memTouch(r);drawMem();drawTR();
+      toast(ch?'内容を修正して正本へ確定しました':'正本へ確定しました')}})}
+function memReject(id){const r=MEM.find(x=>x.id===id);if(!r)return;
+  openDlg({title:'この候補を却下しますか？',sub:'却下した候補は正本には反映されません。一覧には rejected として残ります。',
+    body:memBox(r),okText:'却下する',
+    onOk:()=>{r.st='rejected';memTouch(r);drawMem();drawTR();toast('候補を却下しました')}})}
+function memDelete(id){const r=MEM.find(x=>x.id===id);if(!r)return;
+  openDlg({title:'この項目を削除しますか？',sub:'一覧から完全に削除します。この操作は元に戻せません。',
+    body:memBox(r),note:'資料を再解析すると再び候補として現れる場合があります。',
+    okText:'削除する',okClass:'btn-danger',
+    onOk:()=>{MEM.splice(MEM.indexOf(r),1);drawMem();drawTR();toast('一覧から削除しました')}})}
+function drawMem(){
+  const rows=memFiltered();
+  $('#memCount').textContent=rows.length+'件';
+  $('#memBody').innerHTML = rows.length ? rows.map(r=>`<tr>
+    <td><div class="c-cat">${r.cat}${r.edited?'<span class="tag-ed">手動修正</span>':''}</div><div class="c-item">${esc(r.k)}：${esc(r.v)}</div></td>
+    <td>${bdg(r.st,ITEM_JA[r.st])}</td>
+    <td>${memConf(r)}</td>
+    <td><span class="c-scope">${r.scope}</span></td>
+    <td><span class="c-src" onclick="toast('${r.doc} ${r.page}ページを開きます（sourceDocumentIds）')">${esc(r.doc)}</span>
+        <div class="c-loc">${r.page}ページ・${esc(r.sec)}</div></td>
+    <td><span class="c-at">${r.at}</span></td>
+    <td><div class="c-acts">${memActs(r)}</div></td>
+  </tr>`).join('')
+  : '<tr><td colspan="7"><div class="mem-empty">条件に一致する項目はありません。</div></td></tr>';
+  const n=st=>MEM.filter(r=>r.st===st).length;
+  $('#stCand').textContent=n('candidate')+n('pending');
+  $('#stReq').textContent=n('requiresReview');
+  $('#stConf').textContent=n('confirmed');
+  $('#stApp').textContent=n('applied');
+}
+
+/* ===================== 4-2. 情報引き継ぎ (A8) ===================== */
+const CUR_PRJ={id:'PRJ-2026-0148',name:'搬送ライン更新'};
+const PRJ_LIST=[
+ {id:'PRJ-2026-0132',name:'組立設備改修',st:'見積中',cust:'customer_alpha',at:'9/17'},
+ {id:'PRJ-2026-0155',name:'検査装置リプレース',st:'進行中',cust:'customer_alpha',at:'9/16'},
+ {id:'PRJ-2026-0161',name:'パレタイザ増設',st:'引合',cust:'customer_beta',at:'9/12'},
+ {id:'PRJ-2026-0170',name:'洗浄機更新',st:'見積中',cust:'customer_beta',at:'9/9'},
+ {id:'PRJ-2026-0175',name:'第3工場 搬送ライン新設',st:'引合',cust:'customer_gamma',at:'9/5'},
+ {id:'PRJ-2025-0098',name:'搬送ライン増設（既存）',st:'完了',cust:'customer_alpha',at:'2025/12/20'}
+];
+let TR={target:'',cats:new Set(),items:null,loading:false,stale:false,done:false};
+
+const trSrc=()=>MEM.filter(r=>r.st==='confirmed'||r.st==='applied');
+function trCatData(){const src=trSrc(),inMem=new Set(MEM.map(r=>r.cat));
+  const order=[...Object.keys(CAT_JA).filter(c=>inMem.has(c)),...[...inMem].filter(c=>!CAT_JA[c])];
+  return order.map(c=>({cat:c,ja:CAT_JA[c]||c,n:src.filter(r=>r.cat===c).length}))}
+function trPicked(){return trSrc().filter(r=>TR.cats.has(r.cat))}
+function trTarget(){return PRJ_LIST.find(x=>x.id===TR.target)}
+function trDirty(){if(TR.items)TR.stale=true}
+function trSetTarget(v){TR.target=v;trDirty();drawTR()}
+function trToggleCat(c){TR.cats.has(c)?TR.cats.delete(c):TR.cats.add(c);trDirty();drawTR()}
+function trAllCats(on){trCatData().forEach(c=>{if(c.n)on?TR.cats.add(c.cat):TR.cats.delete(c.cat)});trDirty();drawTR()}
+function trKeep(id,on){const i=TR.items.find(x=>x.id===id);if(i){i.keep=on;drawTR()}}
+function trAllKeep(on){TR.items.forEach(i=>i.keep=on);drawTR()}
+function trReset(){TR.items=null;TR.done=false;TR.stale=false;drawTR()}
+function trFetch(){
+  if(!TR.target||!trPicked().length)return;
+  TR.loading=true;TR.done=false;TR.stale=false;TR.items=null;drawTR();
+  setTimeout(()=>{TR.loading=false;TR.items=trPicked().map(r=>Object.assign({},r,{keep:true}));
+    drawTR();toast(`引き継ぎ候補を ${TR.items.length} 件取得しました（A8）`)},550);
+}
+function trApply(){
+  const p=trTarget(),sel=(TR.items||[]).filter(i=>i.keep);
+  if(!p||!sel.length)return;
+  const cats=[...new Set(sel.map(i=>i.cat))];
+  openDlg({
+    title:'引き継ぎ内容の確認',
+    sub:`この案件の確定済み情報 <b>${sel.length} 件</b> を、下記の案件へ引き継ぎます。`,
+    body:`<dl class="dlg-dl">
+      <dt>引き継ぎ元</dt><dd>${CUR_PRJ.id}　${CUR_PRJ.name}</dd>
+      <dt>引き継ぎ先</dt><dd><b>${p.id}　${p.name}</b>　<span class="bdg plain">${p.st}</span></dd>
+      <dt>カテゴリ</dt><dd>${cats.map(c=>CAT_JA[c]||c).join('・')}（${cats.length}カテゴリ）</dd>
+      <dt>件数</dt><dd>${sel.length} 件${TR.items.length-sel.length?`　<span class="muted">除外 ${TR.items.length-sel.length} 件</span>`:''}</dd></dl>
+      <ul class="dlg-list">${sel.map(i=>`<li><span class="cat">${i.cat}</span> ${esc(i.k)}：${esc(i.v)}</li>`).join('')}</ul>
+      <div class="warn-box">引き継ぎ先では <b>candidate（レビュー待ち）</b> として登録されます。そのまま確定はされず、先方案件でのレビューを経て正本へ反映されます。${p.st==='完了'?'<br>選択された案件は <b>完了案件</b> です。引き継ぎ先として適切かご確認ください。':''}</div>`,
+    okText:'引き継ぎを実行',
+    onOk:()=>{
+      TR.done=true;TR.items.forEach(i=>{if(i.keep)i.moved=true});drawTR();
+      informDlg({title:'✓ 引き継ぎが完了しました',
+        sub:`${p.id}　${p.name} へ ${sel.length} 件を登録しました。`,
+        body:`<dl class="dlg-dl">
+          <dt>transferredCount</dt><dd><b>${sel.length}</b></dd>
+          <dt>登録状態</dt><dd>${bdg('candidate','candidate')}　レビュー待ち</dd>
+          <dt>カテゴリ</dt><dd>${cats.map(c=>CAT_JA[c]||c).join('・')}</dd></dl>
+          <div class="ok-box">引き継いだ情報は、引き継ぎ先案件の「プロジェクトメモリ › 案件情報」に candidate として表示されます。先方案件でレビューのうえ確定してください。</div>`})}
+  });
+}
+function drawTR(){
+  if(!$('#trPrj'))return;
+  const p=trTarget();
+  $('#trPrj').innerHTML='<option value="">選択してください</option>'+
+    PRJ_LIST.map(x=>`<option value="${x.id}"${x.id===TR.target?' selected':''}>${x.id}　${x.name}</option>`).join('');
+  $('#trPrjInfo').innerHTML=p
+    ?`<span class="bdg plain">${p.st}</span><span>${p.cust}</span><span class="muted">最終更新 ${p.at}</span>`
+    :'<span class="muted">引き継ぎ元は現在の案件（'+CUR_PRJ.id+'）です。</span>';
+  const cats=trCatData();
+  cats.forEach(c=>{if(!c.n&&TR.cats.has(c.cat)){TR.cats.delete(c.cat);trDirty()}});
+  $('#trCats').innerHTML=cats.map(c=>`<label class="tr-cat${c.n?'':' off'}">
+    <input type="checkbox"${TR.cats.has(c.cat)?' checked':''}${c.n?'':' disabled'} onchange="trToggleCat('${c.cat}')" style="accent-color:var(--accent)">
+    <span>${c.ja} <span class="muted">${c.cat}</span></span>
+    <span class="n">${c.n?'確定済み '+c.n+'件':'確定済みなし'}</span></label>`).join('');
+  const picked=trPicked();
+  $('#trCatSum').textContent=`選択 ${TR.cats.size} カテゴリ ・ 対象 ${picked.length} 件`;
+  $('#trFetchBtn').disabled=!TR.target||!picked.length||TR.loading;
+  $('#trFetchBtn').textContent=TR.loading?'取得中…':'引き継ぎ候補を取得';
+  $('#trHint').innerHTML=!TR.target?'引き継ぎ先案件を選択してください。'
+    :!TR.cats.size?'引き継ぐカテゴリを1つ以上選択してください。'
+    :!picked.length?'選択したカテゴリに確定済み情報がありません。'
+    :'引き継げるのは<b>確定済み・反映済み</b>の情報のみです。候補・要確認は対象外です。';
+
+  const panel=$('#trPanel'),cnt=$('#trCount');
+  if(TR.loading){cnt.textContent='';panel.innerHTML='<div class="tr-empty">候補を取得しています…</div>';return}
+  if(!TR.items){cnt.textContent='';
+    panel.innerHTML='<div class="tr-empty">① ② を設定して「引き継ぎ候補を取得」を押すと、<br>引き継ぎ候補がここに表示されます。</div>';return}
+  const keep=TR.items.filter(i=>i.keep).length;
+  cnt.textContent=`候補 ${TR.items.length}件 ／ 適用予定 ${keep}件`;
+  panel.innerHTML=
+    (TR.stale?'<div class="warn-box" style="margin:0 0 10px">条件が変更されました。最新の候補を取得し直してください。</div>':'')+
+    (TR.done?'<div class="ok-box" style="margin:0 0 10px">引き継ぎ済みです。別の案件へ引き継ぐ場合は条件を変更して再取得してください。</div>'
+            :`<div class="tr-foot" style="margin:0 0 10px">
+                <button class="btn btn-outline btn-xs" onclick="trAllKeep(true)">すべて適用予定</button>
+                <button class="btn btn-outline btn-xs" onclick="trAllKeep(false)">すべて除外</button></div>`)+
+    TR.items.map(i=>`<div class="tr-item${i.keep?'':' ex'}">
+      <div class="ex-cat">${CAT_JA[i.cat]||i.cat} <span class="muted">${i.cat}</span></div>
+      <div class="tr-item-t">${esc(i.k)}：${esc(i.v)}</div>
+      <div class="tr-item-s">${CUR_PRJ.id} ・ ${esc(i.doc)} ・ ${i.page}ページ</div>
+      <div class="tr-item-m">
+        ${i.moved?'<span class="pill done">引き継ぎ済み</span>':i.keep?'<span class="pill in">適用予定</span>':'<span class="pill out">除外</span>'}
+        ${TR.done?'':`<span style="margin-left:auto;display:flex;gap:6px">${i.keep
+          ?`<button class="btn btn-danger btn-xs" onclick="trKeep('${i.id}',false)">✕ 除外</button>`
+          :`<button class="btn btn-outline btn-xs" onclick="trKeep('${i.id}',true)">✓ 戻す</button>`}</span>`}
+      </div></div>`).join('')+
+    (TR.done?'<button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="trReset()">条件を変えて引き継ぐ</button>'
+            :`<button class="btn btn-primary btn-sm" style="margin-top:8px"${keep&&!TR.stale?'':' disabled'} onclick="trApply()">選択した ${keep} 件を引き継ぐ</button>`)+
+    '<div class="note">A8が返すのは<b>候補</b>です。そのまま確定はされず、必ず引き継ぎ先案件のレビューを経て適用します。</div>';
+}
+
+/* ===================== responsibility modal ===================== */
+function drawResp(){
+  $('#respTbl tbody').innerHTML=RESP.map(r=>`<tr>
+    <td><b>${r[0]}</b></td>
+    <td class="m">${r[1]==='—'?'—':'<b>'+r[1]+'</b><br>'+r[2]}</td>
+    <td class="m">${r[3]}</td>
+    <td><span class="scope-pill ${r[5]}">${r[4]}</span></td></tr>`).join('');
+}
+function openResp(){$('#respMask').classList.add('open')}
+function closeResp(){$('#respMask').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeResp();closeAdd();closeDlg()}});
+
+
+/* ===================== 案件工程ステッパー ===================== */
+/* tick = そのAPIイベントが実際に起きたこと。カテゴリ（controlDevices等）は
+   資料の「話題」であって工程実績ではないため、判定キーには使わない。 */
+const WF=[
+ {id:'input',lb:'インプット',sub:'資料 4件',
+  keys:['A3 <b>status=completed</b><br>sourceType: spec / drawing / cad / bom'],
+  ev:[{t:'2026/05/12',d:'A3 completed — 制御盤_BOM_rev3.pdf',r:'doc_001'},
+      {t:'2026/05/14',d:'A3 completed — 装置全体図_02.pdf',r:'doc_002'}]},
+
+ {id:'quote',lb:'見積・提案',sub:'概算・提案書',
+  keys:['A7 <b>completed</b> ＋ documentType =<br><b>roughQuote</b> / <b>customerProposal</b> / <b>systemConfig</b>'],
+  ev:[{t:'2026/06/03',d:'A7 completed — roughQuote（概算見積）',r:'job_gen_014'},
+      {t:'2026/06/11',d:'A7 completed — customerProposal（提案書）',r:'job_gen_021'}]},
+
+ {id:'order',lb:'受注',sub:'2026/06/28',manual:true,
+  keys:['<b>該当キーなし</b> — 機能A・B・Cのどれも受注を検知できない','間接シグナル（参考）: documentType = <b>schedule</b> / <b>kickoffMinutes</b>'],
+  ev:[{t:'2026/06/28',d:'手動チェック（山田）',r:'—'},
+      {t:'2026/07/02',d:'A7 completed — kickoffMinutes（間接シグナル）',r:'job_gen_033'}]},
+
+ {id:'design',lb:'設計',sub:'電気：作図中',
+  keys:['開始: 機能B <b>B8a</b> POST /v1/drawings/jobs/circuit','開始: 機能B <b>B8b</b> POST /v1/drawings/jobs/board','完了: 機能B <b>B10</b> POST /v1/drawings/jobs/{id}/confirm 成功（出図）','参考: A4 <b>intent=drawingRequest</b>'],
+  ev:[{t:'2026/08/05',d:'B8a 作図ジョブ起動（回路図）status=processing',r:'job_dw_101'},
+      {t:'2026/08/07',d:'A4 intent=drawingRequest',r:'—'}]},
+
+ {id:'build',lb:'製作',sub:'—',manual:true,
+  keys:['<b>該当キーなし</b> — 製作実績はAIプラットフォーム外','参考: 機能B <b>B6</b> 部品表の取り込み（手配の目安）'],
+  ev:[]},
+
+ {id:'accept',lb:'立会・検収',sub:'取説／成績表',
+  keys:['A7 <b>completed</b> ＋ documentType =<br><b>acceptanceReport</b> / <b>operationManual</b>'],
+  ev:[]}
+];
+/* 1=チェック済 / 0=未チェック。autoは根拠から自動、ユーザーが外したら wfOff に記録し再チェックしない */
+let wfTick={input:1,quote:1,order:1,design:0,build:0,accept:0};
+let wfOff={}, wfSel=null, wfGuard=false;
+
+function wfNow(){ /* 進行中 = 未チェックだが根拠イベントが既にある最初の工程 */
+  for(const s of WF){ if(!wfTick[s.id]&&s.ev.length) return s.id; }
+  return null;
+}
+function drawWF(){
+  const now=wfNow();
+  $('#wfRow').innerHTML=WF.map((s,i)=>{
+    const done=!!wfTick[s.id], isNow=s.id===now;
+    /* 区間はどちらかの端がチェック済なら緑。チェックした工程まで必ず線が届く */
+    const lf=done||(i>0&&!!wfTick[WF[i-1].id]);
+    const rf=done||(i<WF.length-1&&!!wfTick[WF[i+1].id]);
+    const cls=['wf-s',done?'done':'',isNow?'now':'',wfSel===s.id?'sel':'',lf?'lf':'',rf?'rf':''].filter(Boolean).join(' ');
+    const chip=s.manual?'<span class="wf-chip">手動</span>':(wfOff[s.id]?'<span class="wf-chip off">解除中</span>':'');
+    return `<div class="${cls}" onclick="wfOpen('${s.id}',this)" tabindex="0">
+      <div class="wf-dot">${done?'✓':''}</div>
+      <div class="wf-lb">${s.lb}</div>
+      <div class="wf-sub">${isNow?'進行中':s.sub}${chip}</div>
+    </div>`;
+  }).join('');
+}
+function wfOpen(id,el){
+  wfGuard=true;setTimeout(()=>wfGuard=false,0);
+  if(wfSel===id){wfClose();return}
+  /* 位置は再描画前に測る（innerHTML差し替えでelがDOMから外れるため） */
+  const bar=$('#wfBar').getBoundingClientRect(), r=el.getBoundingClientRect();
+  wfSel=id;
+  $$('#wfRow .wf-s').forEach((n,i)=>n.classList.toggle('sel',WF[i].id===id));
+  const s=WF.find(x=>x.id===id), done=!!wfTick[id], pop=$('#wfPop');
+  /* 状態バッジは出さない：工程バーの✓と操作ボタンのラベルで足りる */
+  pop.innerHTML=`
+    <h4>${s.lb}<button class="wf-x" onclick="wfClose()">✕</button></h4>
+    <div class="wf-sec">判定キー</div>
+    ${s.keys.map(k=>`<div class="wf-key">${k}</div>`).join('')}
+    <div class="wf-sec">根拠イベント</div>
+    ${s.ev.length?s.ev.map(e=>`<div class="wf-ev"><time>${e.t}</time><span>${e.d}</span><i>${e.r}</i></div>`).join('')
+      :'<div class="wf-none">まだ根拠となるAPIイベントはありません。</div>'}
+    ${wfOff[id]?'<div class="wf-none">※ ユーザーが解除済み。根拠が増えても自動でチェックしません。</div>':''}
+    <div class="wf-act">
+      <button class="btn ${done?'btn-outline':'btn-primary'} btn-sm" onclick="wfToggle('${id}')">${done?'チェックを外す':'チェックを付ける'}</button>
+      <span class="muted">${s.manual?'このAPIには自動判定キーがありません':'自動判定の結果は手動で上書きできます'}</span>
+    </div>`;
+  pop.style.display='';
+  let left=r.left-bar.left+r.width/2-180;
+  left=Math.max(12,Math.min(left,bar.width-372));
+  pop.style.left=left+'px';
+  pop.style.top=(r.bottom-bar.top+6)+'px';
+}
+function wfClose(){wfSel=null;$('#wfPop').style.display='none';drawWF()}
+function wfToggle(id){
+  wfGuard=true;setTimeout(()=>wfGuard=false,0);
+  const s=WF.find(x=>x.id===id);
+  if(wfTick[id]){wfTick[id]=0;wfOff[id]=1;toast(s.lb+'：チェックを外しました（以後 自動では付きません）')}
+  else{wfTick[id]=1;delete wfOff[id];toast(s.lb+'：チェックを付けました')}
+  drawWF();
+  const el=$$('#wfRow .wf-s')[WF.findIndex(x=>x.id===id)];
+  wfSel=null;wfOpen(id,el);
+}
+document.addEventListener('click',e=>{if(!wfGuard&&wfSel&&!e.target.closest('#wfBar'))wfClose()});
+
+/* ===================== init ===================== */
+docs.forEach(d=>{d.items.forEach(i=>i.state='open');d.q=(d.q||[]).map(t=>typeof t==='string'?{q:t,state:'open'}:t)});
+drawDocs();drawEx();drawTypes();drawOut();drawMem();drawTR();drawResp();drawThreads();drawChat();
+drawWF();
+drawTree();
+(function(){const dz=$('#dropZone');
+ ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('on')}));
+ ['dragleave','dragend','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('on')}));
+ dz.addEventListener('drop',e=>pickUp(e.dataTransfer.files));})();
+</script>
+</body>
+</html>
